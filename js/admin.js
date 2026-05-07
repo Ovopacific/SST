@@ -26,6 +26,10 @@ document.getElementById("loginForm").addEventListener("submit", async e => {
   const respuesta = await SSTApi.verificarPassword(usuario, pwd);
   
   if (respuesta && respuesta.success) {
+    if (respuesta.token) {
+      sessionStorage.setItem("sst_token", respuesta.token);
+    }
+    
     currentUser = {
       usuario: usuario || 'admin',
       rol: respuesta.rol || 'admin',
@@ -50,6 +54,7 @@ function logout() {
   document.getElementById("pwdInput").value = "";
   document.getElementById("userInput").value = "";
   document.getElementById("loginError").style.display = "none";
+  sessionStorage.removeItem("sst_token");
   registros = []; filtrados = [];
   currentUser = null;
 }

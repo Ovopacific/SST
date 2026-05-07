@@ -20,26 +20,13 @@ async function buscar(e) {
   Loading.show();
 
   try {
-    const todos = await SSTApi.getRegistros();
-
-    const encontrados = todos.filter(r => {
-      if (!r || !r.Proveedor || !r.Documento) return false;
-      const okNombre = r.Proveedor.toLowerCase().includes(nombre.toLowerCase());
-      
-      // Intentar comparar con documento exacto (encriptado)
-      const docCifrado = SSTApi.encrypt(cedula.trim());
-      // Nota: Si el cifrado AES es dinámico (IV), esto fallará.
-      // Pero CryptoJS.AES.encrypt(text, key) produce una salida determinística 
-      // si no se especifica IV manualmente en ciertas versiones o modos.
-      // Sin embargo, para mayor robustez, lo ideal es desencriptar lo que viene de la base de datos:
-      
-      const docReal = SSTApi.decrypt(r.Documento);
-      const okDoc    = String(docReal).trim() === cedula.trim();
-      
-      return okNombre && okDoc;
+    // El backend ahora filtra la información y solo devuelve lo autorizado
+    const encontrados = await SSTApi.getRegistros({
+      cedula: cedula,
+      proveedor: nombre
     });
 
-    if (!encontrados.length) {
+    if (!encontrados || !encontrados.length) {
       msgEl.textContent = "❌ No se encontraron documentos con esos datos. Verifica el nombre exacto del proveedor y tu cédula.";
       msgEl.className   = "msg error show"; msgEl.style.display = "block";
       return;

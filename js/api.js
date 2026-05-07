@@ -10,34 +10,22 @@
 
 const SSTApi = {
 
-  // ── ENCRIPTACIÓN (CryptoJS AES) ─────────────
+  // ── ENCRIPTACIÓN (MIGRADA AL BACKEND) ─────────────
   encrypt(texto) {
-    if (!texto) return "";
-    try {
-      return CryptoJS.AES.encrypt(String(texto), SST_CONFIG.ENCRYPTION_KEY).toString();
-    } catch (e) {
-      console.error("Encryption error:", e);
-      return texto;
-    }
+    // La encriptación ahora la maneja de forma segura el backend
+    return texto;
   },
 
   decrypt(cifrado) {
-    if (!cifrado) return "";
-    try {
-      const bytes = CryptoJS.AES.decrypt(String(cifrado), SST_CONFIG.ENCRYPTION_KEY);
-      const original = bytes.toString(CryptoJS.enc.Utf8);
-      return original || cifrado; // fallback si falla la llave
-    } catch (e) {
-      console.error("Decryption error:", e);
-      return cifrado;
-    }
+    // El backend ahora envía los datos ya listos, no hay que desencriptar localmente
+    return cifrado;
   },
 
   // ── LEER REGISTROS — JSONP ──────────────────
   // La única técnica que funciona desde GitHub Pages / cualquier dominio.
   // Inyecta un <script src="GAS_URL?callback=fn"> — el navegador
   // lo carga sin restricciones CORS y GAS envuelve la respuesta en fn({...}).
-  getRegistros() {
+  getRegistros(filtros = null) {
     return new Promise((resolve, reject) => {
       const cbName = "_sst_cb_" + Date.now();
       const script = document.createElement("script");
@@ -64,10 +52,16 @@ const SSTApi = {
         // No borramos window[cbName] aquí para evitar ReferenceError si el script llega tarde
       };
 
-      script.src = SST_CONFIG.SCRIPT_URL
-        + "?action=obtenerRegistros"
+      let urlParams = "?action=obtenerRegistros"
         + "&callback=" + cbName
-        + "&_=" + Date.now(); // evitar caché
+        + "&_=" + Date.now();
+        
+      if (filtros && filtros.cedula) {
+        urlParams += "&cedula=" + encodeURIComponent(filtros.cedula) 
+                   + "&proveedor=" + encodeURIComponent(filtros.proveedor || "");
+      }
+
+      script.src = SST_CONFIG.SCRIPT_URL + urlParams;
       script.onerror = () => {
         if (done) return;
         done = true;
@@ -99,6 +93,10 @@ const SSTApi = {
   // Form nativo al iframe: el navegador envía sin restricciones.
   postData(datos) {
     return new Promise((resolve) => {
+      // Inyectar el token de sesión si existe
+      const token = sessionStorage.getItem("sst_token");
+      if (token) datos.token = token;
+
       const frameName = "sst_" + Date.now();
       console.log("[SST API] Enviando POST:", datos);
 
