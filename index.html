@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Portal SST — Sistema de Gestión de Documentos</title>
+  <link rel="stylesheet" href="css/global.css?v=2">
+  <link rel="stylesheet" href="css/index.css">
+</head>
+
+<body>
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="hero-logo">🛡️</div>
+    <h1>Portal SST</h1>
+    <p>Sistema de Gestión de Documentos para Proveedores</p>
+    <span class="hero-version">Seguridad y Salud en el Trabajo</span>
+    <div style="margin-top: 1.5rem; display: flex; justify-content: center;">
+      <a href="https://ovopacific.info/seguridad-y-salud" target="_blank"
+        style="display: flex; align-items: center; gap: 0.5rem; background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.2); color: #fff; text-decoration: none; padding: 0.75rem 1.25rem; border-radius: 8px; font-size: 0.95rem; transition: background 0.3s ease, border-color 0.3s ease;"
+        onmouseover="this.style.background='rgba(255, 255, 255, 0.2)'; this.style.borderColor='rgba(255, 255, 255, 0.4)';"
+        onmouseout="this.style.background='rgba(255, 255, 255, 0.1)'; this.style.borderColor='rgba(255, 255, 255, 0.2)';">
+        <span style="color: #ffd700; font-size: 1.1rem;">ℹ️</span>
+        <span><strong>Información Importante:</strong> Normas de Seguridad y Salud</span>
+      </a>
+    </div>
+
+    <!-- Botón Tutorial -->
+    <div style="margin-top: 2rem; display: flex; justify-content: center;">
+      <button onclick="document.getElementById('tutorialModal').style.display='flex'"
+        style="background: rgba(255,255,255,0.15); color: white; border: 1px solid rgba(255,255,255,0.3); padding: 10px 20px; border-radius: 50px; font-size: 0.95rem; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: all 0.2s;"
+        onmouseover="this.style.background='rgba(255,255,255,0.25)'"
+        onmouseout="this.style.background='rgba(255,255,255,0.15)'">
+        <span>📖</span> ¿Cómo funciona el portal? Ver Guía Rápida
+      </button>
+    </div>
+  </section>
+
+  <!-- MÓDULOS -->
+  <main class="main-grid">
+
+    <!-- PORTAL PROVEEDORES -->
+    <div class="mod-card proveedor" onclick="window.location.href='portal_proveedores'">
+      <div class="mod-icon">📝</div>
+      <div>
+        <h2>Portal de Proveedores</h2>
+        <p>Carga los documentos requeridos de forma fácil y segura.</p>
+      </div>
+      <ul class="mod-features">
+        <li>Formulario guiado paso a paso</li>
+        <li>Carga de archivos PDF, DOC, imágenes</li>
+        <li>Requisitos dinámicos por área</li>
+        <li>Confirmación de envío en tiempo real</li>
+      </ul>
+      <button class="mod-btn">Cargar Documentos →</button>
+    </div>
+
+
+
+    <!-- CONSULTA -->
+    <div class="mod-card consulta" onclick="window.location.href='consulta_estado'">
+      <div class="mod-icon">🔍</div>
+      <div>
+        <h2>Consulta de Estado</h2>
+        <p>Verifica el estado de tus documentos enviados.</p>
+      </div>
+      <ul class="mod-features">
+        <li>Búsqueda por nombre y cédula</li>
+        <li>Ver estado de cada documento</li>
+        <li>Leer comentarios del equipo SST</li>
+        <li>Resumen de aprobaciones</li>
+      </ul>
+      <button class="mod-btn">Consultar Estado →</button>
+    </div>
+
+  </main>
+
+  <!-- FOOTER -->
+  <footer>
+    🛡️ Portal SST &nbsp;·&nbsp; Sistema de Gestión de Documentos &nbsp;·&nbsp; © 2026
+  </footer>
+
+  <!-- MODAL TUTORIAL -->
+  <div id="tutorialModal"
+    style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 9999; justify-content: center; align-items: center; padding: 20px;">
+    <div
+      style="background: white; color: #333; max-width: 600px; width: 100%; border-radius: 12px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
+      <!-- Header -->
+      <div
+        style="background: #004481; color: white; padding: 20px; display: flex; justify-content: space-between; align-items: center;">
+        <h2 style="margin: 0; font-size: 1.2rem; display: flex; align-items: center; gap: 10px;">
+          <span>📖</span> Guía Rápida para Proveedores
+        </h2>
+        <button onclick="document.getElementById('tutorialModal').style.display='none'"
+          style="background: transparent; border: none; color: white; font-size: 1.5rem; cursor: pointer; padding: 0;">✕</button>
+      </div>
+
+      <!-- Body -->
+      <div style="padding: 30px; max-height: 70vh; overflow-y: auto;">
+
+        <div style="margin-bottom: 25px; display: flex; gap: 15px;">
+          <div
+            style="background: #e6f0fa; color: #004481; width: 40px; height: 40px; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-weight: bold; font-size: 1.2rem; flex-shrink: 0;">
+            1</div>
+          <div>
+            <h3 style="margin: 0 0 8px 0; color: #004481; font-size: 1.1rem;">Ingresa tus Datos y Selecciona Área</h3>
+            <p style="margin: 0; font-size: 0.95rem; line-height: 1.5; color: #555;">Haz clic en <strong>"Cargar
+                Documentos"</strong>. Lo primero será ingresar tus datos, elegir el area de trabajo que vas a ingresar y
+              escribir el nombre de tu <strong>Responsable</strong> (la persona de Ovopacific que te atenderá, por
+              ejemplo, el jefe del área a la que vas). Esto nos dirá exactamente qué documentos necesitas subir.</p>
+          </div>
+        </div>
+
+        <div style="margin-bottom: 25px; display: flex; gap: 15px;">
+          <div
+            style="background: #e6f0fa; color: #004481; width: 40px; height: 40px; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-weight: bold; font-size: 1.2rem; flex-shrink: 0;">
+            2</div>
+          <div>
+            <h3 style="margin: 0 0 8px 0; color: #004481; font-size: 1.1rem;">Sube tus Archivos</h3>
+            <p style="margin: 0; font-size: 0.95rem; line-height: 1.5; color: #555;">Verás una lista de requisitos. Haz
+              clic en el botón de subir en cada uno y selecciona el archivo desde tu computadora o celular (PDF, Word, o
+              Imágenes).</p>
+          </div>
+        </div>
+
+        <div style="display: flex; gap: 15px;">
+          <div
+            style="background: #e6f0fa; color: #004481; width: 40px; height: 40px; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-weight: bold; font-size: 1.2rem; flex-shrink: 0;">
+            3</div>
+          <div>
+            <h3 style="margin: 0 0 8px 0; color: #004481; font-size: 1.1rem;">Consulta el Estado</h3>
+            <p style="margin: 0; font-size: 0.95rem; line-height: 1.5; color: #555;">Una vez enviados, puedes regresar a
+              la página principal y hacer clic en <strong>"Consulta de Estado"</strong> para ver si fueron aprobados o
+              si debes corregir algo. Solo necesitas tu número de cédula/RUC.</p>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Footer -->
+      <div style="padding: 20px; background: #f9f9f9; text-align: right; border-top: 1px solid #eee;">
+        <button onclick="document.getElementById('tutorialModal').style.display='none'"
+          style="background: #004481; color: white; border: none; padding: 10px 20px; border-radius: 6px; font-weight: bold; cursor: pointer; transition: background 0.2s;"
+          onmouseover="this.style.background='#003366'"
+          onmouseout="this.style.background='#004481'">¡Entendido!</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+</body>
+
+</html>
