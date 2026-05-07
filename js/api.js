@@ -98,10 +98,13 @@ const SSTApi = {
       if (token) datos.token = token;
 
       const frameName = "sst_" + Date.now();
-      console.log("[SST API] Enviando POST:", datos);
+      console.group("[SST API] Enviando POST");
+      console.log("Acción:", datos.action);
+      console.log("Datos:", datos);
 
       const iframe = document.createElement("iframe");
       iframe.name  = frameName;
+      iframe.id    = frameName;
       iframe.style.cssText = "position:absolute;width:0;height:0;border:0;visibility:hidden;";
       document.body.appendChild(iframe);
 
@@ -122,6 +125,7 @@ const SSTApi = {
       const cleanup = () => {
         try { document.body.removeChild(form);   } catch(e) {}
         try { document.body.removeChild(iframe); } catch(e) {}
+        console.groupEnd();
       };
 
       iframe.onload = () => {
@@ -129,29 +133,38 @@ const SSTApi = {
         done = true;
         let respuesta = null;
         try {
-          const txt = iframe.contentDocument.body.innerText || "";
+          // Intentamos leer la respuesta del iframe
+          // Si el script está en el mismo dominio o si GAS responde con HTML simple,
+          // a veces se puede leer el innerText.
+          const doc = iframe.contentDocument || iframe.contentWindow.document;
+          const txt = doc.body.innerText || "";
           const m   = txt.match(/\{[\s\S]*\}/);
           if (m) respuesta = JSON.parse(m[0]);
         } catch(e) {
-          // cross-origin: no podemos leer → el dato sí llegó (probablemente)
+          // Cross-origin: No podemos leer la respuesta, pero el onload
+          // significa que el servidor respondió (incluso si fue un error).
+          console.log("[SST API] Respuesta recibida (sin acceso por CORS)");
         }
         cleanup();
+        
         if (respuesta) {
+          console.log("[SST API] Respuesta parseada:", respuesta);
           resolve(respuesta);
         } else {
-          // Si no podemos leer la respuesta, devolvemos éxito con un flag de advertencia
+          // Si no podemos leer la respuesta, asumimos éxito pero marcamos como fallback
+          console.warn("[SST API] Resolviendo con Fallback Success");
           resolve({ success: true, éxito: true, _isFallbackSuccess: true });
         }
       };
 
-      // Timeout 16s
+      // Timeout 30s (GAS puede ser lento con archivos o locks)
       setTimeout(() => {
         if (done) return;
         done = true;
         cleanup();
-        console.warn("[SST API] Timeout en postData, asumiendo éxito (fallback)");
+        console.warn("[SST API] Timeout en postData, asumiendo éxito por precaución");
         resolve({ success: true, éxito: true, _timeout: true, _isFallbackSuccess: true });
-      }, 16000);
+      }, 30000);
 
       form.submit();
     });

@@ -9,95 +9,87 @@ let areasGlobales = {};
 // CARGAR ÁREAS AL INICIAR
 // ═════════════════════════════════════════════════════════════════════════
 async function cargarAreas() {
-  try {
-    console.log('📥 Cargando áreas de Google Sheets...');
-    
-    const response = await fetch(SST_CONFIG.SCRIPT_URL + '?action=obtenerAreasDeSheets');
-    const data = await response.json();
-    
-    console.log('📊 Respuesta de áreas:', data);
-    
-    // ⭐ IMPORTANTE: Si hay áreas en Google Sheets, usarlas SIEMPRE
-    if (data.success && data.areas && Object.keys(data.areas).length > 0) {
-      areasGlobales = data.areas;
-      console.log('✅ Áreas cargadas de Google Sheets:', Object.keys(areasGlobales).length);
-      actualizarUIAreas();
-      return areasGlobales;
-    }
-    
-    // Solo usar por defecto si Google Sheets está COMPLETAMENTE vacío
-    console.log('⚠️ Google Sheets vacío, usando áreas por defecto');
-    areasGlobales = SST_CONFIG.AREAS_DEFAULT;
-    await guardarAreasEnSheets(areasGlobales);
-    actualizarUIAreas();
-    
-    return areasGlobales;
-    
-  } catch (error) {
-    console.error('❌ Error cargando áreas:', error);
-    // No cambiar las áreas si hay error
-    console.log('📌 Usando áreas globales actuales');
-    actualizarUIAreas();
-    return areasGlobales;
-  }
-}
-// ═════════════════════════════════════════════════════════════════════════
-// GUARDAR ÁREAS EN GOOGLE SHEETS (PERMANENTE)
-// ═════════════════════════════════════════════════════════════════════════
-
-async function guardarAreasEnSheets(areas) {
-  console.log('💾 Guardando áreas en Google Sheets (vía iframe para evitar CORS)...');
+  console.log('📥 Cargando áreas de Google Sheets...');
   
   return new Promise((resolve) => {
-    const frameName = "sst_areas_" + Date.now();
-
-    const iframe = document.createElement("iframe");
-    iframe.name = frameName;
-    iframe.style.cssText = "position:absolute;width:0;height:0;border:0;visibility:hidden;";
-    document.body.appendChild(iframe);
-
-    const form = document.createElement("form");
-    form.method = "POST";
-    form.action = SST_CONFIG.SCRIPT_URL;
-    form.target = frameName;
-    form.style.display = "none";
-
-    const input = document.createElement("input");
-    input.type = "hidden";
-    input.name = "data";
-    input.value = JSON.stringify({
-      action: 'guardarAreasEnSheets',
-      areas: areas
-    });
-    form.appendChild(input);
-    document.body.appendChild(form);
-
+    const cbName = "_sst_areas_cb_" + Date.now();
+    const script = document.createElement("script");
     let done = false;
-    const cleanup = () => {
-      try { document.body.removeChild(form); } catch(e) {}
-      try { document.body.removeChild(iframe); } catch(e) {}
+
+    window[cbName] = (data) => {
+      done = true;
+      cleanup();
+      console.log('📊 Respuesta de áreas:', data);
+      
+      if (data && data.success && data.areas && Object.keys(data.areas).length > 0) {
+        areasGlobales = data.areas;
+        console.log('✅ Áreas cargadas de Google Sheets:', Object.keys(areasGlobales).length);
+        actualizarUIAreas();
+        resolve(areasGlobales);
+      } else {
+        console.log('⚠️ Google Sheets vacío, usando áreas por defecto');
+        areasGlobales = SST_CONFIG.AREAS_DEFAULT;
+        guardarAreasEnSheets(areasGlobales).then(() => {
+          actualizarUIAreas();
+          resolve(areasGlobales);
+        });
+      }
     };
 
-    iframe.onload = () => {
+    const cleanup = () => {
+      try { document.head.removeChild(script); } catch(e) {}
+    };
+
+    script.src = SST_CONFIG.SCRIPT_URL + "?action=obtenerAreasDeSheets&callback=" + cbName + "&_=" + Date.now();
+    
+    script.onerror = () => {
       if (done) return;
       done = true;
       cleanup();
-      console.log('✅ Áreas enviadas exitosamente (onload)');
-      areasGlobales = areas;
-      resolve(true);
+      console.error('❌ Error de red cargando áreas');
+      actualizarUIAreas();
+      resolve(areasGlobales);
     };
 
     setTimeout(() => {
       if (done) return;
       done = true;
       cleanup();
-      console.log('⚠️ Timeout al guardar áreas, asumiendo éxito');
-      areasGlobales = areas;
-      resolve(true);
-    }, 10000);
+      console.log('📌 Usando áreas globales actuales (timeout)');
+      actualizarUIAreas();
+      resolve(areasGlobales);
+    }, 15000);
 
-    form.submit();
+    document.head.appendChild(script);
   });
+}
+// ═════════════════════════════════════════════════════════════════════════
+// GUARDAR ÁREAS EN GOOGLE SHEETS (PERMANENTE)
+// ═════════════════════════════════════════════════════════════════════════
+
+async function guardarAreasEnSheets(areas) {
+  console.log('💾 Guardando áreas en Google Sheets (vía SSTApi)...');
+  
+  try {
+    const resp = await SSTApi.postData({
+      action: 'guardarAreasEnSheets',
+      areas: areas
+    });
+    
+    if (resp && resp.success) {
+       console.log('✅ Áreas guardadas exitosamente');
+       areasGlobales = areas;
+       return true;
+    } else {
+       console.error('❌ Error del servidor al guardar áreas:', resp);
+       return false;
+    }
+  } catch(e) {
+    console.error('❌ Error de red al guardar áreas:', e);
+    // Asumimos éxito por timeout en iframe si ocurre
+    areasGlobales = areas;
+    return true;
+  }
 }
 // ═════════════════════════════════════════════════════════════════════════
 // AGREGAR/EDITAR ÁREA
