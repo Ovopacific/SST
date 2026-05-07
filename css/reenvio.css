@@ -1,0 +1,312 @@
+/* reenvio.css - Estilos para modal y funcionalidad de reenvío */
+
+/* MODAL REENVÍO */
+.modal-reenvio {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.7);
+    z-index: 1000;
+    justify-content: center;
+    align-items: center;
+}
+
+.modal-reenvio.active {
+    display: flex;
+}
+
+.modal-content-reenvio {
+    background: white;
+    border-radius: 12px;
+    padding: 2rem;
+    max-width: 500px;
+    width: 90%;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+    from {
+        transform: translateY(-50px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+/* ENCABEZADO DEL MODAL */
+.modal-header-reenvio {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    border-bottom: 2px solid #f0f0f0;
+    padding-bottom: 1rem;
+}
+
+.modal-header-reenvio h2 {
+    margin: 0;
+    color: #333;
+    font-size: 1.5rem;
+    font-weight: 600;
+}
+
+.modal-close-reenvio {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: #999;
+    transition: color 0.3s;
+}
+
+.modal-close-reenvio:hover {
+    color: #333;
+}
+
+/* CUERPO DEL MODAL */
+.modal-body-reenvio {
+    margin-bottom: 2rem;
+}
+
+.modal-body-reenvio p {
+    margin: 0.5rem 0;
+    color: #666;
+    font-size: 0.95rem;
+}
+
+.modal-body-reenvio strong {
+    color: #333;
+}
+
+/* ADVERTENCIA */
+.warning-reenvio {
+    color: #dc3545 !important;
+    font-weight: 600 !important;
+    background: #f8d7da;
+    padding: 0.75rem;
+    border-radius: 6px;
+    margin: 1rem 0 !important;
+    border-left: 4px solid #dc3545;
+}
+
+/* CAMPO DE ARCHIVO */
+.field-reenvio {
+    margin: 1.5rem 0;
+}
+
+.field-reenvio label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+    color: #333;
+    font-size: 0.95rem;
+}
+
+.field-reenvio input[type="file"] {
+    width: 100%;
+    padding: 0.75rem;
+    border: 2px solid #e0e0e0;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: all 0.3s;
+}
+
+.field-reenvio input[type="file"]:hover {
+    border-color: #27ae60;
+    background: #f9f9f9;
+}
+
+.field-reenvio input[type="file"]:focus {
+    outline: none;
+    border-color: #27ae60;
+    box-shadow: 0 0 0 3px rgba(39, 174, 96, 0.1);
+}
+
+/* NOMBRE DEL ARCHIVO */
+.archivo-nombre {
+    display: block;
+    margin-top: 0.5rem;
+    color: #27ae60;
+    font-size: 0.85rem;
+    font-weight: 500;
+}
+
+/* PIE DE PÁGINA DEL MODAL */
+.modal-footer-reenvio {
+    display: flex;
+    gap: 1rem;
+    justify-content: flex-end;
+}
+
+.btn {
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 0.95rem;
+    transition: all 0.3s;
+}
+
+.btn-primary {
+    background: #27ae60;
+    color: white;
+}
+
+.btn-primary:hover {
+    background: #229954;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(39, 174, 96, 0.3);
+}
+
+.btn-primary:active {
+    transform: translateY(0);
+}
+
+.btn-secondary {
+    background: #bdc3c7;
+    color: white;
+}
+
+.btn-secondary:hover {
+    background: #95a5a6;
+    transform: translateY(-2px);
+}
+
+.btn-secondary:active {
+    transform: translateY(0);
+}
+
+/* MENSAJES */
+.msg {
+    padding: 1rem;
+    border-radius: 6px;
+    margin: 1rem 0;
+    font-size: 0.95rem;
+    border-left: 4px solid;
+    display: none;
+}
+
+.msg.success {
+    background: #d4edda;
+    color: #155724;
+    border-left-color: #28a745;
+}
+
+.msg.error {
+    background: #f8d7da;
+    color: #721c24;
+    border-left-color: #dc3545;
+}
+
+.msg.info {
+    background: #d1ecf1;
+    color: #0c5460;
+    border-left-color: #17a2b8;
+}
+
+.msg.warning {
+    background: #fff3cd;
+    color: #856404;
+    border-left-color: #ffc107;
+}
+
+/* BOTÓN DE REENVÍO EN DOCUMENTO */
+.btn-reenviar {
+    background: #f39c12;
+    color: white;
+    padding: 0.5rem 1rem;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 600;
+    margin-top: 0.5rem;
+    width: 100%;
+    transition: all 0.3s;
+    font-size: 0.9rem;
+}
+
+.btn-reenviar:hover {
+    background: #e67e22;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(243, 156, 18, 0.3);
+}
+
+.btn-reenviar:active {
+    transform: translateY(0);
+}
+
+/* TARJETA DE DOCUMENTO CON REENVÍO */
+.doc-card-footer {
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid #f0f0f0;
+}
+
+.doc-link {
+    color: #27ae60;
+    text-decoration: none;
+    font-weight: 600;
+    transition: all 0.3s;
+}
+
+.doc-link:hover {
+    color: #229954;
+    text-decoration: underline;
+}
+
+/* REQUISITO */
+.req {
+    color: #dc3545;
+}
+
+/* RESPONSIVE */
+@media (max-width: 768px) {
+    .modal-content-reenvio {
+        max-width: 95%;
+        padding: 1.5rem;
+    }
+
+    .modal-header-reenvio h2 {
+        font-size: 1.2rem;
+    }
+
+    .modal-footer-reenvio {
+        flex-direction: column;
+    }
+
+    .btn {
+        width: 100%;
+    }
+
+    .modal-body-reenvio p {
+        font-size: 0.9rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .modal-content-reenvio {
+        margin: 1rem;
+        padding: 1rem;
+    }
+
+    .modal-header-reenvio {
+        padding-bottom: 0.75rem;
+        margin-bottom: 1rem;
+    }
+
+    .warning-reenvio {
+        padding: 0.5rem;
+    }
+
+    .field-reenvio {
+        margin: 1rem 0;
+    }
+}
