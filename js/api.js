@@ -178,7 +178,7 @@ const SSTApi = {
       area:            datos.area,
       Proveedor:       datos.proveedor,
       Nombre:          datos.responsable,
-      Documento:       datos.documento,
+      Documento:       datos.documento || datos.Documento,
       Empresa:         datos.empresa,
       Área:            datos.area,
       Requisito:       datos.requisito,
