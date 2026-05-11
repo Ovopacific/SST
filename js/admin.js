@@ -244,6 +244,7 @@ function renderTablaDocumentos() {
               <thead>
                 <tr style="background: var(--gray-100);">
                   <th style="padding: 8px 12px; font-size:0.85rem;">Área</th>
+                  <th style="padding: 8px 12px; font-size:0.85rem;">Cédula</th>
                   <th style="padding: 8px 12px; font-size:0.85rem;">Requisito</th>
                   <th style="padding: 8px 12px; font-size:0.85rem;">Fecha</th>
                   <th style="padding: 8px 12px; font-size:0.85rem;">Estado</th>
@@ -261,7 +262,11 @@ function renderTablaDocumentos() {
                   return `
                     <tr style="border-bottom: 1px solid #eee;">
                       <td style="padding: 8px 12px; font-size:0.9rem;">${doc.Área || "—"}</td>
-                      <td style="padding: 8px 12px; font-size:0.9rem; max-width:250px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" title="${doc.Requisito||""}">${doc.Requisito || "—"}</td>
+                      <td style="padding: 8px 12px; font-size:0.9rem;">
+                        <span id="docRow_${globalIdx}">${SSTApi.maskDocumento(doc.Documento)}</span>
+                        <button class="btn btn-ghost btn-sm" onclick="toggleRevealFila(${globalIdx})" style="padding:2px 4px; font-size:0.7rem;">👁️</button>
+                      </td>
+                      <td style="padding: 8px 12px; font-size:0.9rem; max-width:200px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" title="${doc.Requisito||""}">${doc.Requisito || "—"}</td>
                       <td style="padding: 8px 12px; font-size:0.9rem;">${fmtFecha(doc["Fecha Carga"])}</td>
                       <td style="padding: 8px 12px;">
                         <span class="badge ${est}" style="font-size:0.75rem; padding: 2px 6px;">${doc.Estado || "Pendiente"}</span>
@@ -296,6 +301,18 @@ window.toggleProveedor = function(rowId) {
   } else {
     detailRow.style.display = "none";
     if(icon) icon.style.transform = "rotate(0deg)";
+  }
+};
+
+window.toggleRevealFila = function(idx) {
+  const doc = registros[idx];
+  const el = document.getElementById("docRow_" + idx);
+  if (!el || !doc) return;
+  
+  if (el.textContent.includes("*")) {
+    el.textContent = doc.Documento;
+  } else {
+    el.textContent = SSTApi.maskDocumento(doc.Documento);
   }
 };
 
@@ -363,6 +380,7 @@ function filaTR(r, idx, conArchivo) {
     <tr>
       <td><strong>${SSTApi.escapeHTML(r.Proveedor || "—")}</strong></td>
       <td>${SSTApi.escapeHTML(r.Nombre || "—")}</td>
+      <td><code>${SSTApi.maskDocumento(r.Documento)}</code></td>
       <td>${SSTApi.escapeHTML(r.Área   || "—")}</td>
       <td style="max-width:180px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${SSTApi.escapeHTML(r.Requisito||"")}"><span class="doc-meta-item">${SSTApi.escapeHTML(r.Requisito || "—")}</span></td>
       ${archivoCell}
@@ -408,8 +426,8 @@ function abrirModalEstado(idx) {
   // Mostrar documento enmascarado con botón de revelar
   const docEl = document.getElementById("meDoc");
   docEl.innerHTML = `
-    <span id="meDocVal">${SSTApi.maskDocumento(docReal)}</span>
-    <button class="btn btn-ghost btn-sm" onclick="toggleRevealDoc('${docReal.replace(/'/g,"\\'")}')" style="padding:2px 5px; margin-left:5px;" title="Mostrar/Ocultar">👁️</button>
+    <span id="meDocVal">${SSTApi.maskDocumento(r.Documento)}</span>
+    <button class="btn btn-ghost btn-sm" onclick="toggleRevealDocModal()" style="padding:2px 5px; margin-left:5px;" title="Mostrar/Ocultar">👁️</button>
   `;
 
   document.getElementById("meEstado").value      = r.Estado    || "Pendiente";
@@ -418,9 +436,12 @@ function abrirModalEstado(idx) {
   document.getElementById("modalEstado").classList.add("show");
 }
 
-window.toggleRevealDoc = function(realVal) {
+window.toggleRevealDocModal = function() {
+  if (!editandoDoc) return;
   const el = document.getElementById("meDocVal");
+  const realVal = editandoDoc.r.Documento;
   if (!el) return;
+  
   if (el.textContent.includes("*")) {
     el.textContent = realVal;
   } else {
