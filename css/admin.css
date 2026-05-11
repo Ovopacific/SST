@@ -67,9 +67,7 @@ body { background: var(--off-white); }
   display: flex; align-items: center; gap: 12px;
   font-family: var(--font-display); font-size: 1.1rem; color: var(--white);
 }
-.topbar-left .accent-dot {
-  width: 8px; height: 8px; background: var(--accent); border-radius: 50%;
-}
+/* .accent-dot movido a global.css como .status-dot */
 .topbar-right { display: flex; align-items: center; gap: 1rem; }
 .topbar-time { font-size: 0.82rem; color: rgba(255,255,255,0.35); }
 .btn-logout {

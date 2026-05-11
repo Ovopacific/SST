@@ -14,7 +14,7 @@ body { background: var(--off-white); min-height: 100vh; }
   display: flex; align-items: center; gap: 10px;
   font-family: var(--font-display); font-size: 1.05rem; color: var(--white);
 }
-.topbar-brand .dot { width: 8px; height: 8px; background: var(--success); border-radius: 50%; }
+/* .dot movido a global.css como .status-dot */
 .topbar-back { background: none; border: none; font-size: 0.82rem; color: rgba(255,255,255,0.4); cursor: pointer; transition: color 0.2s; }
 .topbar-back:hover { color: var(--success); }
 
