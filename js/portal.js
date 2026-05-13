@@ -12,8 +12,8 @@ document.addEventListener("DOMContentLoaded", async () => {
   Loading.hide();
 
   cargarSelectAreas();
-  // Sync áreas en tiempo real (cada 10 segundos)
-  setInterval(sincronizarAreas, 10000);
+  // Sync áreas (cada 5 minutos para no saturar la red)
+  setInterval(sincronizarAreas, 300000);
 });
 
 /* ── CARGAR ÁREAS EN SELECT ─────────────────── */
