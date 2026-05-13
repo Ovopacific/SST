@@ -8,8 +8,8 @@ let areasGlobales = {};
 // ═════════════════════════════════════════════════════════════════════════
 // CARGAR ÁREAS AL INICIAR
 // ═════════════════════════════════════════════════════════════════════════
-async function cargarAreas() {
-  console.log('📥 Cargando áreas de Google Sheets...');
+async function cargarAreas(intentos = 0) {
+  console.log('📥 Cargando áreas de Google Sheets (intento ' + (intentos + 1) + ')...');
   
   return new Promise((resolve) => {
     const cbName = "_sst_areas_cb_" + Date.now();
@@ -21,23 +21,23 @@ async function cargarAreas() {
       cleanup();
       console.log('📊 Respuesta de áreas:', data);
       
-      if (data && data.success && data.areas && Object.keys(data.areas).length > 0) {
+      if (data && data.success && data.areas) {
         areasGlobales = data.areas;
-        console.log('✅ Áreas cargadas de Google Sheets:', Object.keys(areasGlobales).length);
+        console.log('✅ Áreas cargadas:', Object.keys(areasGlobales).length);
         actualizarUIAreas();
         resolve(areasGlobales);
       } else {
-        console.log('⚠️ Google Sheets vacío, usando áreas por defecto');
+        // Si no hay áreas en Sheets, usamos las de defecto
+        console.log('⚠️ Usando áreas por defecto');
         areasGlobales = SST_CONFIG.AREAS_DEFAULT;
-        guardarAreasEnSheets(areasGlobales).then(() => {
-          actualizarUIAreas();
-          resolve(areasGlobales);
-        });
+        actualizarUIAreas();
+        resolve(areasGlobales);
       }
     };
 
     const cleanup = () => {
       try { document.head.removeChild(script); } catch(e) {}
+      delete window[cbName];
     };
 
     script.src = SST_CONFIG.SCRIPT_URL + "?action=obtenerAreasDeSheets&callback=" + cbName + "&_=" + Date.now();
@@ -46,19 +46,26 @@ async function cargarAreas() {
       if (done) return;
       done = true;
       cleanup();
-      console.error('❌ Error de red cargando áreas');
-      actualizarUIAreas();
-      resolve(areasGlobales);
+      
+      if (intentos < 2) {
+        console.warn('🔄 Reintentando carga de áreas...');
+        setTimeout(() => resolve(cargarAreas(intentos + 1)), 2000);
+      } else {
+        console.error('❌ Error persistente cargando áreas. Usando locales.');
+        areasGlobales = SSTAreas.get();
+        actualizarUIAreas();
+        resolve(areasGlobales);
+      }
     };
 
     setTimeout(() => {
       if (done) return;
       done = true;
       cleanup();
-      console.log('📌 Usando áreas globales actuales (timeout)');
+      areasGlobales = SSTAreas.get();
       actualizarUIAreas();
       resolve(areasGlobales);
-    }, 15000);
+    }, 10000);
 
     document.head.appendChild(script);
   });
