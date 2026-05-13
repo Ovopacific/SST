@@ -6,7 +6,7 @@
 const SST_CONFIG = {
 
   // ── URL del Google Apps Script ─────────────
-  SCRIPT_URL: "https://script.google.com/macros/s/AKfycbz4ynkN-Az2XwWcspfEYmbmhV91FYDB5oC-k629kYcX4DgNLy42D5t1Mqq5lVjOaUr9/exec",
+  SCRIPT_URL: "https://script.google.com/macros/s/AKfycbw4P1B8n5G2pGE1MYLfT92PpgSwkPwd11pdk7mk2xauYe3j4zJMOpiISPbQ1OkGsoMd/exec",
 
   // ── Áreas por defecto si no hay ─────────────
   AREAS_DEFAULT: {
