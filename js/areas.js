@@ -52,6 +52,7 @@ async function cargarAreas(intentos = 0) {
       });
     } else {
       console.error('❌ Error persistente cargando áreas. Usando locales por defecto.');
+      alert('⚠️ Error cargando áreas de la Base de Datos: ' + err.message + '\n\nSe usarán áreas locales temporales.');
       areasGlobales = SSTAreas.get();
       actualizarUIAreas();
       return areasGlobales;
@@ -113,6 +114,7 @@ async function guardarAreasEnBaseDatos(areas) {
     return true;
   } catch (err) {
     console.error('❌ Error al guardar áreas en Supabase:', err);
+    alert('❌ Error al guardar áreas en la Base de Datos: ' + err.message);
     return false;
   }
 }
