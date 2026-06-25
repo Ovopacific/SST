@@ -6,7 +6,7 @@ let archivos = {};   // { index: File }
 
 /* ── INIT ──────────────────────────────────── */
 document.addEventListener("DOMContentLoaded", async () => {
-  // Mostrar loading mientras se cargan las áreas de Google Sheets
+  // Mostrar loading mientras se cargan las áreas de la base de datos (Supabase)
   Loading.show();
   await cargarAreas();
   Loading.hide();

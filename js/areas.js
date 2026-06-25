@@ -1,6 +1,4 @@
-// ═════════════════════════════════════════════════════════════════════════
-// areas.js - Gestión de áreas con almacenamiento en Google Sheets
-// ═════════════════════════════════════════════════════════════════════════
+// areas.js - Gestión de áreas con almacenamiento en Base de Datos (Supabase)
 
 // Variable global para almacenar áreas en memoria
 let areasGlobales = {};
@@ -31,7 +29,7 @@ async function cargarAreas(intentos = 0) {
     if (!data || data.length === 0) {
       console.log('⚠️ No hay áreas en Supabase. Inicializando con valores por defecto...');
       areasGlobales = SST_CONFIG.AREAS_DEFAULT;
-      await guardarAreasEnSheets(areasGlobales);
+      await guardarAreasEnBaseDatos(areasGlobales);
     } else {
       const areasObj = {};
       data.forEach(row => {
@@ -64,7 +62,7 @@ async function cargarAreas(intentos = 0) {
 // GUARDAR ÁREAS EN SUPABASE (PERMANENTE)
 // ═════════════════════════════════════════════════════════════════════════
 
-async function guardarAreasEnSheets(areas) {
+async function guardarAreasEnBaseDatos(areas) {
   console.log('💾 Guardando áreas en Supabase...');
   
   if (SST_CONFIG.DEMO_MODE) {
@@ -149,15 +147,15 @@ async function agregarArea(nombreArea, requisitos) {
   console.log('🆕 Área agregada localmente:', nombreArea);
   console.log('📊 Total de áreas:', Object.keys(areasGlobales).length);
   
-  // Guardar TODAS las áreas en Google Sheets
-  const guardado = await guardarAreasEnSheets(areasGlobales);
+  // Guardar TODAS las áreas en la Base de Datos
+  const guardado = await guardarAreasEnBaseDatos(areasGlobales);
   
   if (guardado) {
-    console.log('✅ Área guardada en Google Sheets');
+    console.log('✅ Área guardada en la Base de Datos');
     actualizarUIAreas();
     return true;
   } else {
-    alert('❌ Error al guardar en Google Sheets');
+    alert('❌ Error al guardar en la Base de Datos');
     return false;
   }
 }
@@ -174,15 +172,15 @@ async function eliminarArea(nombreArea) {
   // Eliminar de la variable global
   delete areasGlobales[nombreArea];
   
-  // Guardar cambios en Google Sheets
-  const guardado = await guardarAreasEnSheets(areasGlobales);
+  // Guardar cambios en la Base de Datos
+  const guardado = await guardarAreasEnBaseDatos(areasGlobales);
   
   if (guardado) {
     console.log('✅ Área eliminada:', nombreArea);
     actualizarUIAreas();
     return true;
   } else {
-    alert('❌ Error al guardar cambios en Google Sheets');
+    alert('❌ Error al guardar cambios en la Base de Datos');
     return false;
   }
 }

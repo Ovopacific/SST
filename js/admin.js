@@ -576,7 +576,7 @@ async function agregarReq() {
   areas[editandoArea].push(val);
 
   Loading.show();
-  await guardarAreasEnSheets(areas);
+  await guardarAreasEnBaseDatos(areas);
   Loading.hide();
 
   document.getElementById("mRInput").value = "";
@@ -591,7 +591,7 @@ async function editarReq(idx) {
     areas[editandoArea][idx] = nuevo.trim();
 
     Loading.show();
-    await guardarAreasEnSheets(areas);
+    await guardarAreasEnBaseDatos(areas);
     Loading.hide();
 
     renderListaReqs();
@@ -604,7 +604,7 @@ async function eliminarReq(idx) {
   areas[editandoArea].splice(idx, 1);
 
   Loading.show();
-  await guardarAreasEnSheets(areas);
+  await guardarAreasEnBaseDatos(areas);
   Loading.hide();
 
   renderListaReqs();

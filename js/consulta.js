@@ -38,8 +38,8 @@ async function buscar(e) {
       const clave = (doc.Área || "") + "|" + (doc.Requisito || "");
       
       // Si no existe, lo agregamos. 
-      // Si ya existe, lo reemplazamos con este nuevo, porque Google Sheets 
-      // devuelve los registros de arriba hacia abajo (los más nuevos están al final de la lista).
+      // Si ya existe, lo reemplazamos con este nuevo, porque la base de datos 
+      // devuelve los registros ordenados por fecha/ID (los más nuevos tienen mayor ID).
       // Alternativamente, si tienen ID de Fila, el de número de fila mayor es el más nuevo.
       
       if (!unicos[clave]) {
