@@ -385,28 +385,27 @@ const SSTApi = {
     
     try {
       const client = getSupabaseClient();
-      const u = usuario.toLowerCase().trim();
+      let email = usuario.trim();
       
-      const { data: userRow, error } = await client
-        .from("usuarios")
-        .select("*")
-        .eq("usuario", u)
-        .maybeSingle();
-        
-      if (error) throw error;
-      if (!userRow) {
-        return { success: false, error: "Usuario no encontrado." };
+      // Si ingresa solo un nombre de usuario (ej: admin), le agregamos un dominio por defecto para Supabase Auth
+      if (!email.includes("@")) {
+        email += "@ovopacific.com";
       }
       
-      if (userRow.pwd !== pwd) {
-        return { success: false, error: "Contraseña incorrecta." };
+      const { data, error } = await client.auth.signInWithPassword({
+        email: email,
+        password: pwd
+      });
+      
+      if (error) {
+        return { success: false, error: "Credenciales inválidas en Supabase Auth: " + error.message };
       }
       
       return {
         success: true,
-        rol: userRow.rol,
-        permisos: userRow.permisos || [],
-        token: "session-" + Math.random().toString(36).substring(2)
+        rol: "admin",
+        permisos: ["dashboard", "documentos", "areas", "proveedores", "usuarios"],
+        token: data.session.access_token
       };
     } catch (err) {
       console.error("[Supabase API] Error en verificarPassword:", err);
