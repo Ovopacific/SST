@@ -86,8 +86,11 @@ function actualizarReloj() {
 /* ── PERMISOS ──────────────────────────────── */
 function tienePermiso(permiso) {
   if (!currentUser) return false;
-  if (currentUser.rol === 'admin') return true;
-  return currentUser.permisos.includes(permiso);
+  const usuario = String(currentUser.usuario).trim().toLowerCase();
+  const rol = String(currentUser.rol).trim().toLowerCase();
+  if (usuario === 'admin' || rol === 'admin') return true;
+  const permisos = (currentUser.permisos || []).map(p => String(p).trim().toLowerCase());
+  return permisos.includes(String(permiso).trim().toLowerCase());
 }
 
 function aplicarPermisosUI() {
