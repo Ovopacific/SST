@@ -10,6 +10,143 @@
 
 const SSTApi = {
 
+  // ── CONTROLADOR DE MODO DEMO ────────────────
+  _demoHandler(action, params) {
+    if (!localStorage.getItem("sst_demo_registros")) {
+      localStorage.setItem("sst_demo_registros", JSON.stringify([
+        {
+          Timestamp: new Date(Date.now() - 3600000 * 2).toISOString(),
+          Proveedor: "Servicios Hidráulicos SAS",
+          Nombre: "Juan Carlos Pérez",
+          Documento: "10203040",
+          Empresa: "Hidra SAS",
+          Área: "Caldera",
+          Requisito: "Certificado de capacitación en calderas",
+          "Nombre Archivo": "certificado_juan.pdf",
+          "URL Documento": "#",
+          "Fecha Carga": new Date(Date.now() - 3600000 * 2).toISOString(),
+          Estado: "Pendiente",
+          Comentarios: "",
+          Fila: 2
+        },
+        {
+          Timestamp: new Date(Date.now() - 3600000 * 5).toISOString(),
+          Proveedor: "Eléctricos del Pacífico",
+          Nombre: "María Camila Díaz",
+          Documento: "98765432",
+          Empresa: "Díaz Eléctricos",
+          Área: "Mantenimiento",
+          Requisito: "Licencia técnica actualizada",
+          "Nombre Archivo": "licencia_tecnica.pdf",
+          "URL Documento": "#",
+          "Fecha Carga": new Date(Date.now() - 3600000 * 5).toISOString(),
+          Estado: "Aprobado",
+          Comentarios: "Documento al día.",
+          Fila: 3
+        }
+      ]));
+    }
+    if (!localStorage.getItem("sst_demo_usuarios")) {
+      localStorage.setItem("sst_demo_usuarios", JSON.stringify([
+        { usuario: "admin", rol: "admin", permisos: ["dashboard", "documentos", "areas", "proveedores", "usuarios"] },
+        { usuario: "visor", rol: "visor", permisos: ["dashboard", "documentos"] }
+      ]));
+    }
+    
+    if (action === "getRegistros") {
+      let regs = JSON.parse(localStorage.getItem("sst_demo_registros"));
+      if (params && params.cedula) {
+        regs = regs.filter(r => r.Documento === params.cedula);
+      }
+      return regs;
+    }
+    
+    if (action === "guardarDocumento") {
+      let regs = JSON.parse(localStorage.getItem("sst_demo_registros"));
+      let nuevo = {
+        Timestamp: new Date().toISOString(),
+        Proveedor: params.proveedor || params.Proveedor,
+        Nombre: params.responsable || params.Nombre,
+        Documento: params.documento || params.Documento,
+        Empresa: params.empresa || params.Empresa,
+        Área: params.area || params.Área,
+        Requisito: params.requisito || params.Requisito,
+        "Nombre Archivo": params.nombreArchivo || params.NombreArchivo,
+        "URL Documento": "#",
+        "Fecha Carga": new Date().toISOString(),
+        Estado: "Pendiente",
+        Comentarios: "",
+        Fila: regs.length + 2
+      };
+      regs.push(nuevo);
+      localStorage.setItem("sst_demo_registros", JSON.stringify(regs));
+      return { success: true };
+    }
+    
+    if (action === "actualizarEstado") {
+      let regs = JSON.parse(localStorage.getItem("sst_demo_registros"));
+      let filaNum = parseInt(params.fila || params.Fila);
+      let encontrado = false;
+      for (let i = 0; i < regs.length; i++) {
+        if (regs[i].Fila === filaNum) {
+          regs[i].Estado = params.estado || params.Estado;
+          regs[i].Comentarios = params.comentarios || params.Comentarios || "";
+          encontrado = true;
+          break;
+        }
+      }
+      localStorage.setItem("sst_demo_registros", JSON.stringify(regs));
+      return { success: encontrado, error: encontrado ? "" : "Registro no encontrado" };
+    }
+    
+    if (action === "eliminarDocumento") {
+      let regs = JSON.parse(localStorage.getItem("sst_demo_registros"));
+      let filaNum = parseInt(params.fila || params.Fila);
+      regs = regs.filter(r => r.Fila !== filaNum);
+      regs.forEach((r, idx) => r.Fila = idx + 2);
+      localStorage.setItem("sst_demo_registros", JSON.stringify(regs));
+      return { success: true };
+    }
+    
+    if (action === "verificarPassword") {
+      let usrs = JSON.parse(localStorage.getItem("sst_demo_usuarios"));
+      let u = params.usuario.toLowerCase().trim();
+      if (u === "admin" && params.pwd === "admin") {
+        return { success: true, rol: "admin", permisos: ["dashboard", "documentos", "areas", "proveedores", "usuarios"], token: "demo-token" };
+      }
+      let found = usrs.find(x => x.usuario.toLowerCase() === u && params.pwd === "1234");
+      if (found) {
+        return { success: true, rol: found.rol, permisos: found.permisos, token: "demo-token" };
+      }
+      return { success: false, error: "Usuario/pwd demo incorrecto. Usa admin/admin o 1234" };
+    }
+    
+    if (action === "obtenerUsuarios") {
+      return JSON.parse(localStorage.getItem("sst_demo_usuarios"));
+    }
+    
+    if (action === "guardarUsuario") {
+      let usrs = JSON.parse(localStorage.getItem("sst_demo_usuarios"));
+      let u = params.usuario.toLowerCase().trim();
+      let per = params.permisos || [];
+      let index = usrs.findIndex(x => x.usuario.toLowerCase() === u);
+      if (index !== -1) {
+        usrs[index].permisos = per;
+      } else {
+        usrs.push({ usuario: params.usuario, rol: "visor", permisos: per });
+      }
+      localStorage.setItem("sst_demo_usuarios", JSON.stringify(usrs));
+      return { success: true };
+    }
+    
+    if (action === "eliminarUsuario") {
+      let usrs = JSON.parse(localStorage.getItem("sst_demo_usuarios"));
+      usrs = usrs.filter(x => x.usuario.toLowerCase() !== params.usuario.toLowerCase());
+      localStorage.setItem("sst_demo_usuarios", JSON.stringify(usrs));
+      return { success: true };
+    }
+  },
+
   // ── ENCRIPTACIÓN (MIGRADA AL BACKEND) ─────────────
   encrypt(texto) {
     // La encriptación ahora la maneja de forma segura el backend
@@ -26,6 +163,9 @@ const SSTApi = {
   // Inyecta un <script src="GAS_URL?callback=fn"> — el navegador
   // lo carga sin restricciones CORS y GAS envuelve la respuesta en fn({...}).
   getRegistros(filtros = null) {
+    if (SST_CONFIG.DEMO_MODE) {
+      return Promise.resolve(this._demoHandler("getRegistros", filtros));
+    }
     return new Promise((resolve, reject) => {
       const cbName = "_sst_cb_" + Date.now();
       const script = document.createElement("script");
@@ -92,6 +232,9 @@ const SSTApi = {
   // GAS redirige → fetch/XHR falla por CORS.
   // Form nativo al iframe: el navegador envía sin restricciones.
   postData(datos) {
+    if (SST_CONFIG.DEMO_MODE) {
+      return Promise.resolve(this._demoHandler(datos.action, datos));
+    }
     return new Promise((resolve) => {
       // Inyectar el token de sesión si existe
       const token = sessionStorage.getItem("sst_token");
@@ -215,6 +358,9 @@ const SSTApi = {
 
   // ── VERIFICAR PASSWORD (LOGIN SECRETO) ──────
   verificarPassword(usuario, pwd) {
+    if (SST_CONFIG.DEMO_MODE) {
+      return Promise.resolve(this._demoHandler("verificarPassword", { usuario, pwd }));
+    }
     return new Promise((resolve) => {
       const cbName = "_sst_login_" + Date.now();
       const script = document.createElement("script");
@@ -258,6 +404,9 @@ const SSTApi = {
 
   // ── OBTENER USUARIOS ────────────────────────
   obtenerUsuarios() {
+    if (SST_CONFIG.DEMO_MODE) {
+      return Promise.resolve(this._demoHandler("obtenerUsuarios", null));
+    }
     return new Promise((resolve, reject) => {
       const cbName = "_sst_usr_" + Date.now();
       const script = document.createElement("script");

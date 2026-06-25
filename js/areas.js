@@ -11,6 +11,12 @@ let areasGlobales = {};
 async function cargarAreas(intentos = 0) {
   console.log('📥 Cargando áreas de Google Sheets (intento ' + (intentos + 1) + ')...');
   
+  if (SST_CONFIG.DEMO_MODE) {
+    areasGlobales = SSTAreas.get();
+    actualizarUIAreas();
+    return areasGlobales;
+  }
+  
   return new Promise((resolve) => {
     const cbName = "_sst_areas_cb_" + Date.now();
     const script = document.createElement("script");
@@ -76,6 +82,12 @@ async function cargarAreas(intentos = 0) {
 
 async function guardarAreasEnSheets(areas) {
   console.log('💾 Guardando áreas en Google Sheets (vía SSTApi)...');
+  
+  if (SST_CONFIG.DEMO_MODE) {
+    SSTAreas.save(areas);
+    areasGlobales = areas;
+    return true;
+  }
   
   try {
     const resp = await SSTApi.postData({

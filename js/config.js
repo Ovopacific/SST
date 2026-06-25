@@ -5,6 +5,10 @@
 
 const SST_CONFIG = {
 
+  // ── MODO DE PRUEBA / DEMO ──────────────────
+  // Si está en true, la app funciona de forma 100% local (sin Apps Script/Sheets)
+  DEMO_MODE: true,
+
   // ── URL del Google Apps Script ─────────────
   SCRIPT_URL: "https://script.google.com/macros/s/AKfycbzy3cYDqYpyWDwDiYYOOq53fo2satQWRgrP-hQ6E31_PCBUD_q7l8jRUElGyyaNGH7I/exec",
 
