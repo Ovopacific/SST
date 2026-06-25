@@ -166,17 +166,39 @@ function logInternalError(ctx, msg, det) {
 function obtenerAreasDeSheets() {
   try {
     var ss = SpreadsheetApp.openById(SPREADSHEET_ID);
-    var hoja = ss.getSheetByName("Config");
+    var hoja = ss.getSheetByName("Áreas") || ss.getSheetByName("Config");
     if (!hoja) return { success: true, areas: {} };
     
     var datos = hoja.getDataRange().getValues();
     var areas = {};
-    for (var i = 0; i < datos.length; i++) {
+    if (datos.length <= 1) return { success: true, areas: {} };
+    
+    var cabeceras = datos[0];
+    var esFormatoJson = false;
+    if (cabeceras.indexOf("Requisitos") !== -1 || hoja.getName() === "Áreas") {
+      esFormatoJson = true;
+    }
+    
+    for (var i = 1; i < datos.length; i++) {
       var area = datos[i][0];
       var req  = datos[i][1];
       if (!area) continue;
-      if (!areas[area]) areas[area] = [];
-      if (req) areas[area].push(req);
+      
+      if (esFormatoJson) {
+        if (req) {
+          try {
+            var parseado = JSON.parse(req);
+            areas[area] = Array.isArray(parseado) ? parseado : [req];
+          } catch(e) {
+            areas[area] = [req];
+          }
+        } else {
+          areas[area] = [];
+        }
+      } else {
+        if (!areas[area]) areas[area] = [];
+        if (req) areas[area].push(req);
+      }
     }
     return { success: true, areas: areas };
   } catch(e) { return { success: false, error: e.message }; }
@@ -185,23 +207,38 @@ function obtenerAreasDeSheets() {
 function guardarAreasEnSheets(areas) {
   try {
     var ss = SpreadsheetApp.openById(SPREADSHEET_ID);
-    var hoja = ss.getSheetByName("Config");
-    if (!hoja) hoja = ss.insertSheet("Config");
+    var hoja = ss.getSheetByName("Áreas") || ss.getSheetByName("Config") || ss.insertSheet("Áreas");
     hoja.clearContents();
     
     var filas = [];
-    for (var area in areas) {
-      if (!areas.hasOwnProperty(area)) continue;
-      var reqs = areas[area];
-      if (!reqs || reqs.length === 0) {
-        filas.push([area, ""]);
-      } else {
-        for (var j = 0; j < reqs.length; j++) {
-          filas.push([area, reqs[j]]);
+    var esAreasNueva = (hoja.getName() === "Áreas");
+    
+    if (esAreasNueva) {
+      filas.push(["Área", "Requisitos", "Fecha Creación", "Estado"]);
+      for (var area in areas) {
+        if (!areas.hasOwnProperty(area)) continue;
+        var reqs = areas[area] || [];
+        filas.push([area, JSON.stringify(reqs), new Date().toISOString(), "Activo"]);
+      }
+      if (filas.length > 0) {
+        hoja.getRange(1, 1, filas.length, 4).setValues(filas);
+      }
+    } else {
+      for (var area in areas) {
+        if (!areas.hasOwnProperty(area)) continue;
+        var reqs = areas[area];
+        if (!reqs || reqs.length === 0) {
+          filas.push([area, ""]);
+        } else {
+          for (var j = 0; j < reqs.length; j++) {
+            filas.push([area, reqs[j]]);
+          }
         }
       }
+      if (filas.length > 0) {
+        hoja.getRange(1, 1, filas.length, 2).setValues(filas);
+      }
     }
-    if (filas.length > 0) hoja.getRange(1, 1, filas.length, 2).setValues(filas);
     return { success: true };
   } catch(e) { return { success: false, error: e.message }; }
 }
