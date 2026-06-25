@@ -7,11 +7,11 @@ const SST_CONFIG = {
 
   // ── MODO DE PRUEBA / DEMO ──────────────────
   // Si está en true, la app funciona de forma 100% local (usando localStorage)
-  DEMO_MODE: true,
+  DEMO_MODE: false,
 
   // ── CONFIGURACIÓN DE SUPABASE ──────────────
-  SUPABASE_URL: "ESCRIBE_AQUI_TU_SUPABASE_URL",
-  SUPABASE_KEY: "ESCRIBE_AQUI_TU_SUPABASE_ANON_KEY",
+  SUPABASE_URL: "https://ocfvenqjucvxpnowidwgi.supabase.co",
+  SUPABASE_KEY: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9jZnZlbnFqdWN2eHBub3dpd2dpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIzOTE5NzAsImV4cCI6MjA5Nzk2Nzk3MH0.ChiADUJMClemPeLnRhS6SHHcoqgD0wgx8qn7_ltkl8E",
 
   // ── URL del Google Apps Script (DEPRECADO) ─
   SCRIPT_URL: "https://script.google.com/macros/s/AKfycbzy3cYDqYpyWDwDiYYOOq53fo2satQWRgrP-hQ6E31_PCBUD_q7l8jRUElGyyaNGH7I/exec",
