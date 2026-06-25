@@ -478,7 +478,10 @@ async function guardarEstado() {
     };
     console.log("Enviando actualización de estado:", payloadEnvio);
     
-    await SSTApi.actualizarEstado(payloadEnvio);
+    const res = await SSTApi.actualizarEstado(payloadEnvio);
+    if (res && res.success === false) {
+      throw new Error(res.error || "No se pudo actualizar el estado en Supabase.");
+    }
 
     // Actualizar localmente
     registros[idx].Estado      = nuevoEstado;
