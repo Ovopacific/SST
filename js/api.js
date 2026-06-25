@@ -208,23 +208,24 @@ const SSTApi = {
     
     try {
       const client = getSupabaseClient();
-      let query = client.from("registros").select("*");
+      let rows = [];
       
       if (filtros && filtros.cedula) {
-        query = query.eq("documento", filtros.cedula.trim());
-      }
-      
-      const { data, error } = await query.order("id", { ascending: true });
-      if (error) throw error;
-      
-      let rows = data || [];
-      
-      if (filtros && filtros.proveedor) {
-        const provLower = filtros.proveedor.toLowerCase().trim();
-        rows = rows.filter(row => 
-          (row.proveedor && row.proveedor.toLowerCase().includes(provLower)) ||
-          (row.nombre && row.nombre.toLowerCase().includes(provLower))
-        );
+        // Consulta anónima segura mediante función RPC para evitar exposición de toda la tabla
+        const { data, error } = await client.rpc("consultar_documentos_proveedor", {
+          p_cedula: filtros.cedula.trim(),
+          p_proveedor: filtros.proveedor ? filtros.proveedor.trim() : ""
+        });
+        if (error) throw error;
+        rows = data || [];
+      } else {
+        // Consulta del panel administrativo (autenticado)
+        const { data, error } = await client
+          .from("registros")
+          .select("*")
+          .order("id", { ascending: true });
+        if (error) throw error;
+        rows = data || [];
       }
       
       // Mapear a propiedades del frontend
