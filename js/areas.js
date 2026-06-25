@@ -9,7 +9,7 @@ let areasGlobales = {};
 // CARGAR ÁREAS AL INICIAR
 // ═════════════════════════════════════════════════════════════════════════
 async function cargarAreas(intentos = 0) {
-  console.log('📥 Cargando áreas de Google Sheets (intento ' + (intentos + 1) + ')...');
+  console.log('📥 Cargando áreas (intento ' + (intentos + 1) + ')...');
   
   if (SST_CONFIG.DEMO_MODE) {
     areasGlobales = SSTAreas.get();
@@ -17,71 +17,55 @@ async function cargarAreas(intentos = 0) {
     return areasGlobales;
   }
   
-  return new Promise((resolve) => {
-    const cbName = "_sst_areas_cb_" + Date.now();
-    const script = document.createElement("script");
-    let done = false;
-
-    window[cbName] = (data) => {
-      done = true;
-      cleanup();
-      console.log('📊 Respuesta de áreas:', data);
+  try {
+    const client = getSupabaseClient();
+    const { data, error } = await client
+      .from("areas")
+      .select("*")
+      .eq("estado", "Activo")
+      .order("id", { ascending: true });
       
-      if (data && data.success && data.areas) {
-        areasGlobales = data.areas;
-        console.log('✅ Áreas cargadas:', Object.keys(areasGlobales).length);
-        actualizarUIAreas();
-        resolve(areasGlobales);
-      } else {
-        // Si no hay áreas en Sheets, usamos las de defecto
-        console.log('⚠️ Usando áreas por defecto');
-        areasGlobales = SST_CONFIG.AREAS_DEFAULT;
-        actualizarUIAreas();
-        resolve(areasGlobales);
-      }
-    };
-
-    const cleanup = () => {
-      try { document.head.removeChild(script); } catch(e) {}
-      delete window[cbName];
-    };
-
-    script.src = SST_CONFIG.SCRIPT_URL + "?action=obtenerAreasDeSheets&callback=" + cbName + "&_=" + Date.now();
+    if (error) throw error;
     
-    script.onerror = () => {
-      if (done) return;
-      done = true;
-      cleanup();
-      
-      if (intentos < 2) {
-        console.warn('🔄 Reintentando carga de áreas...');
-        setTimeout(() => resolve(cargarAreas(intentos + 1)), 2000);
-      } else {
-        console.error('❌ Error persistente cargando áreas. Usando locales.');
-        areasGlobales = SSTAreas.get();
-        actualizarUIAreas();
-        resolve(areasGlobales);
-      }
-    };
-
-    setTimeout(() => {
-      if (done) return;
-      done = true;
-      cleanup();
+    // Si no hay áreas en la base de datos, inicializamos con los valores por defecto
+    if (!data || data.length === 0) {
+      console.log('⚠️ No hay áreas en Supabase. Inicializando con valores por defecto...');
+      areasGlobales = SST_CONFIG.AREAS_DEFAULT;
+      await guardarAreasEnSheets(areasGlobales);
+    } else {
+      const areasObj = {};
+      data.forEach(row => {
+        areasObj[row.area] = row.requisitos;
+      });
+      areasGlobales = areasObj;
+    }
+    
+    console.log('✅ Áreas cargadas:', Object.keys(areasGlobales).length);
+    actualizarUIAreas();
+    return areasGlobales;
+  } catch (err) {
+    console.error('❌ Error cargando áreas de Supabase:', err);
+    if (intentos < 2) {
+      console.warn('🔄 Reintentando carga de áreas...');
+      return new Promise(resolve => {
+        setTimeout(async () => {
+          resolve(await cargarAreas(intentos + 1));
+        }, 2000);
+      });
+    } else {
+      console.error('❌ Error persistente cargando áreas. Usando locales por defecto.');
       areasGlobales = SSTAreas.get();
       actualizarUIAreas();
-      resolve(areasGlobales);
-    }, 10000);
-
-    document.head.appendChild(script);
-  });
+      return areasGlobales;
+    }
+  }
 }
 // ═════════════════════════════════════════════════════════════════════════
-// GUARDAR ÁREAS EN GOOGLE SHEETS (PERMANENTE)
+// GUARDAR ÁREAS EN SUPABASE (PERMANENTE)
 // ═════════════════════════════════════════════════════════════════════════
 
 async function guardarAreasEnSheets(areas) {
-  console.log('💾 Guardando áreas en Google Sheets (vía SSTApi)...');
+  console.log('💾 Guardando áreas en Supabase...');
   
   if (SST_CONFIG.DEMO_MODE) {
     SSTAreas.save(areas);
@@ -90,24 +74,48 @@ async function guardarAreasEnSheets(areas) {
   }
   
   try {
-    const resp = await SSTApi.postData({
-      action: 'guardarAreasEnSheets',
-      areas: areas
-    });
+    const client = getSupabaseClient();
     
-    if (resp && resp.success) {
-       console.log('✅ Áreas guardadas exitosamente');
-       areasGlobales = areas;
-       return true;
-    } else {
-       console.error('❌ Error del servidor al guardar áreas:', resp);
-       return false;
+    // 1. Obtener todas las áreas existentes
+    const { data: dbAreas, error: fetchErr } = await client.from("areas").select("id, area");
+    if (fetchErr) throw fetchErr;
+    
+    const areasNombres = Object.keys(areas);
+    
+    // 2. Encontrar áreas para eliminar
+    const idsToDelete = dbAreas
+      .filter(row => !areasNombres.includes(row.area))
+      .map(row => row.id);
+      
+    if (idsToDelete.length > 0) {
+      const { error: deleteErr } = await client
+        .from("areas")
+        .delete()
+        .in("id", idsToDelete);
+      if (deleteErr) throw deleteErr;
     }
-  } catch(e) {
-    console.error('❌ Error de red al guardar áreas:', e);
-    // Asumimos éxito por timeout en iframe si ocurre
+    
+    // 3. Upsert de las áreas actuales
+    const upsertRows = areasNombres.map(name => ({
+      area: name,
+      requisitos: areas[name],
+      estado: 'Active'
+    }));
+    
+    if (upsertRows.length > 0) {
+      const { error: upsertErr } = await client
+        .from("areas")
+        .upsert(upsertRows, { onConflict: 'area' });
+        
+      if (upsertErr) throw upsertErr;
+    }
+    
+    console.log('✅ Áreas guardadas exitosamente en Supabase');
     areasGlobales = areas;
     return true;
+  } catch (err) {
+    console.error('❌ Error al guardar áreas en Supabase:', err);
+    return false;
   }
 }
 // ═════════════════════════════════════════════════════════════════════════

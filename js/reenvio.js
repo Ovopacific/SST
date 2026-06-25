@@ -73,32 +73,20 @@ async function enviarReenvio() {
         const empresa = document.getElementById('rEmpresa').textContent;
 
         const datos = {
-            action: 'guardarDocumento',
-            Proveedor: nombreProveedor,
-            Nombre: nombreResponsable,
-            Documento: documentoEnReenvio.cedula,
-            Empresa: empresa,
-            Área: documentoEnReenvio.area,
-            Requisito: documentoEnReenvio.requisito,
-            NombreArchivo: archivo.name,
-            ArchivoBase64: base64,
-            FechaCarga: new Date().toISOString(),
-            Estado: 'Pendiente',
-            Comentarios: 'Reenviado por proveedor'
+            proveedor: nombreProveedor,
+            responsable: nombreResponsable,
+            documento: documentoEnReenvio.cedula,
+            empresa: empresa,
+            area: documentoEnReenvio.area,
+            requisito: documentoEnReenvio.requisito,
+            nombreArchivo: archivo.name,
+            base64: base64,
+            comentarios: 'Reenviado por proveedor'
         };
 
         console.log('Enviando reenvío:', datos);
 
-        const response = await fetch(SST_CONFIG.SCRIPT_URL, {
-            method: 'POST',
-            body: JSON.stringify(datos)
-        });
-
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-
-        const resultado = await response.json();
+        const resultado = await SSTApi.guardarDocumento(datos);
 
         if (resultado.success) {
             // Mostrar éxito de manera mucho más clara

@@ -8,6 +8,48 @@
    - Form + iframe      → ✅ FUNCIONA para POST
 ═══════════════════════════════════════════════ */
 
+// ── AUXILIARES DE SUPABASE ──────────────────
+let _supabaseInstance = null;
+function getSupabaseClient() {
+  if (_supabaseInstance) return _supabaseInstance;
+  if (typeof supabase === "undefined") {
+    throw new Error("El SDK de Supabase no está cargado. Asegúrate de incluir <script src=\"https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2\"></script> en tu HTML.");
+  }
+  if (!SST_CONFIG.SUPABASE_URL || !SST_CONFIG.SUPABASE_KEY || SST_CONFIG.SUPABASE_URL.includes("ESCRIBE_AQUI")) {
+    throw new Error("Supabase no está configurado. Por favor, edita js/config.js con tu URL y anon API Key.");
+  }
+  _supabaseInstance = supabase.createClient(SST_CONFIG.SUPABASE_URL, SST_CONFIG.SUPABASE_KEY);
+  return _supabaseInstance;
+}
+
+function base64ToBlob(base64, mimeType = 'application/pdf') {
+  try {
+    const byteCharacters = atob(base64);
+    const byteNumbers = new Array(byteCharacters.length);
+    for (let i = 0; i < byteCharacters.length; i++) {
+      byteNumbers[i] = byteCharacters.charCodeAt(i);
+    }
+    const byteArray = new Uint8Array(byteNumbers);
+    return new Blob([byteArray], { type: mimeType });
+  } catch (e) {
+    console.error("Error decodificando base64 a Blob:", e);
+    throw new Error("El archivo está corrupto o no se pudo decodificar correctamente.");
+  }
+}
+
+function getMimeType(filename) {
+  const ext = filename.split('.').pop().toLowerCase();
+  switch (ext) {
+    case 'pdf': return 'application/pdf';
+    case 'jpg':
+    case 'jpeg': return 'image/jpeg';
+    case 'png': return 'image/png';
+    case 'doc': return 'application/msword';
+    case 'docx': return 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+    default: return 'application/octet-stream';
+  }
+}
+
 const SSTApi = {
 
   // ── CONTROLADOR DE MODO DEMO ────────────────
@@ -158,192 +200,171 @@ const SSTApi = {
     return cifrado;
   },
 
-  // ── LEER REGISTROS — JSONP ──────────────────
-  // La única técnica que funciona desde GitHub Pages / cualquier dominio.
-  // Inyecta un <script src="GAS_URL?callback=fn"> — el navegador
-  // lo carga sin restricciones CORS y GAS envuelve la respuesta en fn({...}).
-  getRegistros(filtros = null) {
+  // ── LEER REGISTROS — SUPABASE ──────────────────
+  async getRegistros(filtros = null) {
     if (SST_CONFIG.DEMO_MODE) {
-      return Promise.resolve(this._demoHandler("getRegistros", filtros));
+      return this._demoHandler("getRegistros", filtros);
     }
-    return new Promise((resolve, reject) => {
-      const cbName = "_sst_cb_" + Date.now();
-      const script = document.createElement("script");
-      let done = false;
-
-      // GAS llamará esta función con los datos
-      window[cbName] = (data) => {
-        if (done) {
-          // Si ya terminó (por timeout), simplemente nos limpiamos
-          delete window[cbName];
-          return;
-        }
-        done = true;
-        cleanup();
-        if (data && (data.success || data.registros)) {
-          resolve(data.registros || []);
-        } else {
-          reject(new Error(data?.error || "Respuesta inválida del servidor"));
-        }
-      };
-
-      const cleanup = () => {
-        try { document.head.removeChild(script); } catch(e) {}
-        // No borramos window[cbName] aquí para evitar ReferenceError si el script llega tarde
-      };
-
-      let urlParams = "?action=obtenerRegistros"
-        + "&callback=" + cbName
-        + "&_=" + Date.now();
-        
+    
+    try {
+      const client = getSupabaseClient();
+      let query = client.from("registros").select("*");
+      
       if (filtros && filtros.cedula) {
-        urlParams += "&cedula=" + encodeURIComponent(filtros.cedula) 
-                   + "&proveedor=" + encodeURIComponent(filtros.proveedor || "");
+        query = query.eq("documento", filtros.cedula.trim());
       }
-
-      script.src = SST_CONFIG.SCRIPT_URL + urlParams;
-      script.onerror = () => {
-        if (done) return;
-        done = true;
-        cleanup();
-        delete window[cbName]; // Aquí sí podemos borrarlo
-        reject(new Error(
-          "No se pudo cargar el script de GAS.\n" +
-          "Verifica que el despliegue tenga acceso: 'Cualquier persona'."
-        ));
-      };
-
-      // Timeout 30 segundos (a veces GAS es lento si hay muchos datos)
-      setTimeout(() => {
-        if (done) return;
-        done = true;
-        cleanup();
-        // Dejamos una función vacía que se auto-elimine para evitar ReferenceError
-        const originalCb = window[cbName];
-        window[cbName] = () => { delete window[cbName]; };
-        reject(new Error("Tiempo de espera agotado (30s). El servidor no respondió."));
-      }, 30000);
-
-      document.head.appendChild(script);
-    });
+      
+      const { data, error } = await query.order("id", { ascending: true });
+      if (error) throw error;
+      
+      let rows = data || [];
+      
+      if (filtros && filtros.proveedor) {
+        const provLower = filtros.proveedor.toLowerCase().trim();
+        rows = rows.filter(row => 
+          (row.proveedor && row.proveedor.toLowerCase().includes(provLower)) ||
+          (row.nombre && row.nombre.toLowerCase().includes(provLower))
+        );
+      }
+      
+      // Mapear a propiedades del frontend
+      return rows.map(row => ({
+        Timestamp: row.created_at,
+        Proveedor: row.proveedor,
+        Nombre: row.nombre,
+        Documento: row.documento,
+        Empresa: row.empresa,
+        Área: row.area,
+        Requisito: row.requisito,
+        "Nombre Archivo": row.nombre_archivo,
+        "URL Documento": row.url_documento,
+        "Fecha Carga": row.created_at,
+        Estado: row.estado,
+        Comentarios: row.comentarios || "",
+        Fila: row.id
+      }));
+    } catch (err) {
+      console.error("[Supabase API] Error en getRegistros:", err);
+      throw err;
+    }
   },
 
-  // ── ENVIAR DATOS — Form + Iframe ────────────
-  // GAS redirige → fetch/XHR falla por CORS.
-  // Form nativo al iframe: el navegador envía sin restricciones.
+  // ── DEPRECADO — MANTENIDO PARA COMPATIBILIDAD ──
   postData(datos) {
     if (SST_CONFIG.DEMO_MODE) {
       return Promise.resolve(this._demoHandler(datos.action, datos));
     }
-    return new Promise((resolve) => {
-      // Inyectar el token de sesión si existe
-      const token = sessionStorage.getItem("sst_token");
-      if (token) datos.token = token;
-
-      const frameName = "sst_" + Date.now();
-      console.group("[SST API] Enviando POST");
-      console.log("Acción:", datos.action);
-      console.log("Datos:", datos);
-
-      const iframe = document.createElement("iframe");
-      iframe.name  = frameName;
-      iframe.id    = frameName;
-      iframe.style.cssText = "position:absolute;width:0;height:0;border:0;visibility:hidden;";
-      document.body.appendChild(iframe);
-
-      const form  = document.createElement("form");
-      form.method = "POST";
-      form.action = SST_CONFIG.SCRIPT_URL;
-      form.target = frameName;
-      form.style.display = "none";
-
-      const input = document.createElement("input");
-      input.type  = "hidden";
-      input.name  = "data";
-      input.value = JSON.stringify(datos);
-      form.appendChild(input);
-      document.body.appendChild(form);
-
-      let done = false;
-      const cleanup = () => {
-        try { document.body.removeChild(form);   } catch(e) {}
-        try { document.body.removeChild(iframe); } catch(e) {}
-        console.groupEnd();
-      };
-
-      iframe.onload = () => {
-        if (done) return;
-        done = true;
-        let respuesta = null;
-        try {
-          // Intentamos leer la respuesta del iframe
-          // Si el script está en el mismo dominio o si GAS responde con HTML simple,
-          // a veces se puede leer el innerText.
-          const doc = iframe.contentDocument || iframe.contentWindow.document;
-          const txt = doc.body.innerText || "";
-          const m   = txt.match(/\{[\s\S]*\}/);
-          if (m) respuesta = JSON.parse(m[0]);
-        } catch(e) {
-          // Cross-origin: No podemos leer la respuesta, pero el onload
-          // significa que el servidor respondió (incluso si fue un error).
-          console.log("[SST API] Respuesta recibida (sin acceso por CORS)");
-        }
-        cleanup();
-        
-        if (respuesta) {
-          console.log("[SST API] Respuesta parseada:", respuesta);
-          resolve(respuesta);
-        } else {
-          // Si no podemos leer la respuesta, asumimos éxito pero marcamos como fallback
-          console.warn("[SST API] Resolviendo con Fallback Success");
-          resolve({ success: true, éxito: true, _isFallbackSuccess: true });
-        }
-      };
-
-      // Timeout 30s (GAS puede ser lento con archivos o locks)
-      setTimeout(() => {
-        if (done) return;
-        done = true;
-        cleanup();
-        console.warn("[SST API] Timeout en postData, asumiendo éxito por precaución");
-        resolve({ success: true, éxito: true, _timeout: true, _isFallbackSuccess: true });
-      }, 30000);
-
-      form.submit();
-    });
+    console.warn("postData está deprecado. Las llamadas se dirigen ahora a Supabase.");
+    return Promise.resolve({ success: false, error: "postData deprecado" });
   },
 
   // ── GUARDAR DOCUMENTO ───────────────────────
   async guardarDocumento(datos) {
-    return await this.postData({
-      action:         "guardarDocumento",
-      nombreProveedor: datos.proveedor,
-      area:            datos.area,
-      Proveedor:       datos.proveedor,
-      Nombre:          datos.responsable,
-      Documento:       datos.documento || datos.Documento,
-      Empresa:         datos.empresa,
-      Área:            datos.area,
-      Requisito:       datos.requisito,
-      NombreArchivo:   datos.nombreArchivo,
-      ArchivoBase64:   datos.base64,
-      FechaCarga:      new Date().toISOString(),
-      Estado:          "Pendiente"
-    });
+    if (SST_CONFIG.DEMO_MODE) {
+      return this._demoHandler("guardarDocumento", datos);
+    }
+    
+    try {
+      const client = getSupabaseClient();
+      
+      // 1. Decodificar Base64 a Blob para subir a Supabase Storage
+      const base64 = datos.base64 || datos.ArchivoBase64;
+      const nombreArchivo = datos.nombreArchivo || datos.NombreArchivo;
+      
+      if (!base64) {
+        throw new Error("No se proporcionó el archivo en base64.");
+      }
+      
+      const fileMime = getMimeType(nombreArchivo);
+      const blob = base64ToBlob(base64, fileMime);
+      
+      // Crear un nombre único de archivo para evitar colisiones
+      const timestamp = Date.now();
+      const cleanProveedor = (datos.proveedor || datos.Proveedor || "prov").replace(/[^a-z0-9]/gi, '_').toLowerCase();
+      const storagePath = `${cleanProveedor}/${timestamp}_${nombreArchivo}`;
+      
+      // Subir archivo al bucket 'documentos_sst'
+      const { data: uploadData, error: uploadError } = await client.storage
+        .from("documentos_sst")
+        .upload(storagePath, blob, {
+          contentType: fileMime,
+          upsert: true
+        });
+        
+      if (uploadError) {
+        console.error("[Supabase Storage] Error al subir archivo:", uploadError);
+        throw uploadError;
+      }
+      
+      // Obtener la URL pública del archivo subido
+      const { data: urlData } = client.storage
+        .from("documentos_sst")
+        .getPublicUrl(storagePath);
+        
+      const urlDocumento = urlData.publicUrl;
+      
+      // 2. Insertar metadatos en la tabla 'registros'
+      const registroDB = {
+        proveedor: datos.proveedor || datos.Proveedor,
+        nombre: datos.responsable || datos.Nombre,
+        documento: datos.documento || datos.Documento,
+        empresa: datos.empresa || datos.Empresa,
+        area: datos.area || datos.Área,
+        requisito: datos.requisito || datos.Requisito,
+        nombre_archivo: nombreArchivo,
+        url_documento: urlDocumento,
+        estado: datos.estado || datos.Estado || "Pendiente",
+        comentarios: datos.comentarios || datos.Comentarios || ""
+      };
+      
+      const { data: insertData, error: insertError } = await client
+        .from("registros")
+        .insert([registroDB])
+        .select();
+        
+      if (insertError) {
+        console.error("[Supabase DB] Error al insertar registro:", insertError);
+        // Intentar borrar el archivo subido si falla la base de datos
+        await client.storage.from("documentos_sst").remove([storagePath]);
+        throw insertError;
+      }
+      
+      return { success: true, registros: insertData };
+    } catch (err) {
+      console.error("[Supabase API] Error en guardarDocumento:", err);
+      return { success: false, error: err.message };
+    }
   },
 
   // ── ACTUALIZAR ESTADO ───────────────────────
   async actualizarEstado(datos) {
-    return await this.postData({
-      action:      "actualizarEstado",
-      Proveedor:   datos.proveedor,
-      Documento:   datos.documento,
-      Requisito:   datos.requisito,
-      Área:        datos.area,
-      Estado:      datos.estado,
-      Comentarios: datos.comentarios || "",
-      Fila:        datos.fila || ""
-    });
+    if (SST_CONFIG.DEMO_MODE) {
+      return this._demoHandler("actualizarEstado", datos);
+    }
+    
+    try {
+      const client = getSupabaseClient();
+      const filaId = parseInt(datos.fila || datos.Fila);
+      
+      if (isNaN(filaId)) {
+        throw new Error("ID de fila inválido.");
+      }
+      
+      const { error } = await client
+        .from("registros")
+        .update({
+          estado: datos.estado || datos.Estado,
+          comentarios: datos.comentarios || datos.Comentarios || ""
+        })
+        .eq("id", filaId);
+        
+      if (error) throw error;
+      
+      return { success: true };
+    } catch (err) {
+      console.error("[Supabase API] Error en actualizarEstado:", err);
+      return { success: false, error: err.message };
+    }
   },
 
   // ── ARCHIVO → BASE64 ────────────────────────
@@ -356,115 +377,186 @@ const SSTApi = {
     });
   },
 
-  // ── VERIFICAR PASSWORD (LOGIN SECRETO) ──────
-  verificarPassword(usuario, pwd) {
+  // ── VERIFICAR PASSWORD ──────────────────────
+  async verificarPassword(usuario, pwd) {
     if (SST_CONFIG.DEMO_MODE) {
-      return Promise.resolve(this._demoHandler("verificarPassword", { usuario, pwd }));
+      return this._demoHandler("verificarPassword", { usuario, pwd });
     }
-    return new Promise((resolve) => {
-      const cbName = "_sst_login_" + Date.now();
-      const script = document.createElement("script");
-      let done = false;
-
-      window[cbName] = (data) => {
-        done = true;
-        cleanup();
-        resolve(data);
-      };
-
-      const cleanup = () => {
-        try { document.head.removeChild(script); } catch(e) {}
-        delete window[cbName];
-      };
-
-      script.src = SST_CONFIG.SCRIPT_URL
-        + "?action=verificarPassword"
-        + "&usuario=" + encodeURIComponent(usuario)
-        + "&pwd=" + encodeURIComponent(pwd)
-        + "&callback=" + cbName
-        + "&_=" + Date.now();
+    
+    try {
+      const client = getSupabaseClient();
+      const u = usuario.toLowerCase().trim();
       
-      script.onerror = () => {
-        if (done) return;
-        done = true;
-        cleanup();
-        resolve({ success: false, error: "Error de red al conectar" });
+      const { data: userRow, error } = await client
+        .from("usuarios")
+        .select("*")
+        .eq("usuario", u)
+        .maybeSingle();
+        
+      if (error) throw error;
+      if (!userRow) {
+        return { success: false, error: "Usuario no encontrado." };
+      }
+      
+      if (userRow.pwd !== pwd) {
+        return { success: false, error: "Contraseña incorrecta." };
+      }
+      
+      return {
+        success: true,
+        rol: userRow.rol,
+        permisos: userRow.permisos || [],
+        token: "session-" + Math.random().toString(36).substring(2)
       };
-
-      setTimeout(() => {
-        if (done) return;
-        done = true;
-        cleanup();
-        resolve({ success: false, error: "Tiempo de espera agotado" });
-      }, 10000);
-
-      document.head.appendChild(script);
-    });
+    } catch (err) {
+      console.error("[Supabase API] Error en verificarPassword:", err);
+      return { success: false, error: err.message };
+    }
   },
 
   // ── OBTENER USUARIOS ────────────────────────
-  obtenerUsuarios() {
+  async obtenerUsuarios() {
     if (SST_CONFIG.DEMO_MODE) {
-      return Promise.resolve(this._demoHandler("obtenerUsuarios", null));
+      return this._demoHandler("obtenerUsuarios", null);
     }
-    return new Promise((resolve, reject) => {
-      const cbName = "_sst_usr_" + Date.now();
-      const script = document.createElement("script");
-      let done = false;
-
-      window[cbName] = (data) => {
-        done = true;
-        cleanup();
-        if (data && data.success) {
-          resolve(data.usuarios || []);
-        } else {
-          reject(new Error(data?.error || "Error al obtener usuarios"));
-        }
-      };
-
-      const cleanup = () => {
-        try { document.head.removeChild(script); } catch(e) {}
-        delete window[cbName];
-      };
-
-      script.src = SST_CONFIG.SCRIPT_URL
-        + "?action=obtenerUsuarios"
-        + "&callback=" + cbName
-        + "&_=" + Date.now();
+    
+    try {
+      const client = getSupabaseClient();
+      const { data, error } = await client
+        .from("usuarios")
+        .select("*")
+        .order("id", { ascending: true });
+        
+      if (error) throw error;
       
-      script.onerror = () => reject(new Error("Error de red"));
-      setTimeout(() => reject(new Error("Timeout")), 15000);
-      document.head.appendChild(script);
-    });
+      return data || [];
+    } catch (err) {
+      console.error("[Supabase API] Error en obtenerUsuarios:", err);
+      throw err;
+    }
   },
 
   // ── GUARDAR USUARIO ─────────────────────────
   async guardarUsuarioBackend(usuario, pwd, permisos) {
-    return await this.postData({
-      action: "guardarUsuario",
-      usuario: usuario,
-      pwd: pwd,
-      permisos: permisos
-    });
+    if (SST_CONFIG.DEMO_MODE) {
+      return this._demoHandler("guardarUsuario", { usuario, pwd, permisos });
+    }
+    
+    try {
+      const client = getSupabaseClient();
+      const u = usuario.toLowerCase().trim();
+      const per = permisos || [];
+      
+      const { data: existingUser } = await client
+        .from("usuarios")
+        .select("id")
+        .eq("usuario", u)
+        .maybeSingle();
+        
+      if (existingUser) {
+        const updateData = { permisos: per };
+        if (pwd && pwd.trim() !== "") {
+          updateData.pwd = pwd;
+        }
+        
+        const { error } = await client
+          .from("usuarios")
+          .update(updateData)
+          .eq("usuario", u);
+          
+        if (error) throw error;
+      } else {
+        const { error } = await client
+          .from("usuarios")
+          .insert([{
+            usuario: u,
+            pwd: pwd || "1234",
+            rol: "visor",
+            permisos: per
+          }]);
+          
+        if (error) throw error;
+      }
+      
+      return { success: true };
+    } catch (err) {
+      console.error("[Supabase API] Error en guardarUsuarioBackend:", err);
+      return { success: false, error: err.message };
+    }
   },
 
   // ── ELIMINAR USUARIO ────────────────────────
   async eliminarUsuarioBackend(usuario) {
-    return await this.postData({
-      action: "eliminarUsuario",
-      usuario: usuario
-    });
+    if (SST_CONFIG.DEMO_MODE) {
+      return this._demoHandler("eliminarUsuario", { usuario });
+    }
+    
+    try {
+      const client = getSupabaseClient();
+      const u = usuario.toLowerCase().trim();
+      
+      if (u === "admin") {
+        throw new Error("No se puede eliminar el usuario administrador principal.");
+      }
+      
+      const { error } = await client
+        .from("usuarios")
+        .delete()
+        .eq("usuario", u);
+        
+      if (error) throw error;
+      
+      return { success: true };
+    } catch (err) {
+      console.error("[Supabase API] Error en eliminarUsuarioBackend:", err);
+      return { success: false, error: err.message };
+    }
   },
 
   // ── ELIMINAR DOCUMENTO ──────────────────────
   async eliminarDocumento(datos) {
-    return await this.postData({
-      action:    "eliminarDocumento",
-      Fila:      datos.fila      || "",
-      Proveedor: datos.proveedor || "",
-      Requisito: datos.requisito || "",
-      Área:      datos.area      || ""
-    });
+    if (SST_CONFIG.DEMO_MODE) {
+      return this._demoHandler("eliminarDocumento", datos);
+    }
+    
+    try {
+      const client = getSupabaseClient();
+      const filaId = parseInt(datos.fila || datos.Fila);
+      
+      if (isNaN(filaId)) {
+        throw new Error("ID de fila inválido para eliminar.");
+      }
+      
+      const { data: docData } = await client
+        .from("registros")
+        .select("url_documento")
+        .eq("id", filaId)
+        .maybeSingle();
+        
+      if (docData && docData.url_documento) {
+        try {
+          const parts = docData.url_documento.split('/documentos_sst/');
+          if (parts.length > 1) {
+            const storagePath = decodeURIComponent(parts[1]);
+            await client.storage.from("documentos_sst").remove([storagePath]);
+          }
+        } catch (storageErr) {
+          console.warn("[Supabase Storage] No se pudo borrar el archivo:", storageErr);
+        }
+      }
+      
+      const { error } = await client
+        .from("registros")
+        .delete()
+        .eq("id", filaId);
+        
+      if (error) throw error;
+      
+      return { success: true };
+    } catch (err) {
+      console.error("[Supabase API] Error en eliminarDocumento:", err);
+      return { success: false, error: err.message };
+    }
   },
 
 

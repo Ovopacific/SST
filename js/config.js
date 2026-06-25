@@ -6,10 +6,14 @@
 const SST_CONFIG = {
 
   // ── MODO DE PRUEBA / DEMO ──────────────────
-  // Si está en true, la app funciona de forma 100% local (sin Apps Script/Sheets)
+  // Si está en true, la app funciona de forma 100% local (usando localStorage)
   DEMO_MODE: true,
 
-  // ── URL del Google Apps Script ─────────────
+  // ── CONFIGURACIÓN DE SUPABASE ──────────────
+  SUPABASE_URL: "ESCRIBE_AQUI_TU_SUPABASE_URL",
+  SUPABASE_KEY: "ESCRIBE_AQUI_TU_SUPABASE_ANON_KEY",
+
+  // ── URL del Google Apps Script (DEPRECADO) ─
   SCRIPT_URL: "https://script.google.com/macros/s/AKfycbzy3cYDqYpyWDwDiYYOOq53fo2satQWRgrP-hQ6E31_PCBUD_q7l8jRUElGyyaNGH7I/exec",
 
   // ── Áreas por defecto si no hay ─────────────
