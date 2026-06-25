@@ -97,7 +97,7 @@ async function guardarAreasEnBaseDatos(areas) {
     const upsertRows = areasNombres.map(name => ({
       area: name,
       requisitos: areas[name],
-      estado: 'Active'
+      estado: 'Activo'
     }));
     
     if (upsertRows.length > 0) {
