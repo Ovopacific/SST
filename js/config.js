@@ -10,7 +10,7 @@ const SST_CONFIG = {
   DEMO_MODE: false,
 
   // ── CONFIGURACIÓN DE SUPABASE ──────────────
-  SUPABASE_URL: "https://ocfvenqjucvxpnowidwgi.supabase.co",
+  SUPABASE_URL: "https://ocfvenqjucvxpnowiwgi.supabase.co",
   SUPABASE_KEY: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9jZnZlbnFqdWN2eHBub3dpd2dpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIzOTE5NzAsImV4cCI6MjA5Nzk2Nzk3MH0.ChiADUJMClemPeLnRhS6SHHcoqgD0wgx8qn7_ltkl8E",
 
 
