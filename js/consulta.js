@@ -111,10 +111,6 @@ function renderResultados(docs, nombre, cedula) {
         </div>
         <div class="doc-meta">
           <div class="doc-meta-item">
-            <span class="lbl">Archivo:</span>
-            <span class="val">${SSTApi.escapeHTML(doc["Nombre Archivo"] || "—")}</span>
-          </div>
-          <div class="doc-meta-item">
             <span class="lbl">Cargado:</span>
             <span class="val">${fmtFecha(doc["Fecha Carga"])}</span>
           </div>
