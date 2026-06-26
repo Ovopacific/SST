@@ -22,6 +22,8 @@ body {
   z-index: -2;
   box-shadow: 10px 10px 40px rgba(15, 37, 68, 0.12);
   pointer-events: none;
+  transform-origin: top left;
+  animation: floatLeft 12s ease-in-out infinite alternate;
 }
 
 .decor-left-sub {
@@ -32,26 +34,30 @@ body {
   border-bottom-right-radius: 100%;
   z-index: -3;
   pointer-events: none;
+  transform-origin: top left;
+  animation: floatLeftSub 16s ease-in-out infinite alternate;
 }
 
 .decor-right {
   position: absolute;
   top: -120px; right: -120px;
   width: 380px; height: 380px;
-  border: 1.5px solid rgba(39, 174, 96, 0.3);
+  border: 2px dashed rgba(39, 174, 96, 0.3);
   border-radius: 50%;
   z-index: -2;
   pointer-events: none;
+  animation: rotateRight 35s linear infinite;
 }
 
 .decor-right-sub {
   position: absolute;
   top: -60px; right: -60px;
   width: 300px; height: 300px;
-  border: 1.5px solid rgba(27, 102, 236, 0.18);
+  border: 1.5px dashed rgba(27, 102, 236, 0.2);
   border-radius: 50%;
   z-index: -3;
   pointer-events: none;
+  animation: rotateRightSub 25s linear infinite reverse;
 }
 
 .decor-dots {
@@ -62,6 +68,33 @@ body {
   background-size: 14px 14px;
   z-index: -4;
   pointer-events: none;
+  animation: pulseDots 8s ease-in-out infinite alternate;
+}
+
+/* ── ANIMACIONES DE DECORACIÓN ───────────────── */
+@keyframes floatLeft {
+  0% { transform: scale(1) translate(0, 0); }
+  100% { transform: scale(1.05) translate(4px, 8px); }
+}
+
+@keyframes floatLeftSub {
+  0% { transform: scale(1) translate(0, 0); }
+  100% { transform: scale(1.03) translate(8px, 12px); }
+}
+
+@keyframes rotateRight {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+@keyframes rotateRightSub {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+@keyframes pulseDots {
+  0% { transform: translateY(0); opacity: 0.7; }
+  100% { transform: translateY(-12px); opacity: 1; }
 }
 
 /* ── HERO ──────────────────────────────────── */
