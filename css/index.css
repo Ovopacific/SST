@@ -12,27 +12,56 @@ body {
   overflow-x: hidden;
 }
 
-/* ── CURVAS DECORATIVAS DE FONDO ────────────── */
-body::before {
-  content: '';
+/* ── CURVAS DECORATIVAS DE FONDO (MOCKUP) ────── */
+.decor-left {
   position: absolute;
-  top: -150px; left: -150px;
-  width: 450px; height: 450px;
-  background: radial-gradient(circle, rgba(22, 51, 91, 0.06) 0%, rgba(22, 51, 91, 0.02) 60%, transparent 100%);
-  border-radius: 50%;
+  top: 0; left: 0;
+  width: 260px; height: 260px;
+  background: linear-gradient(135deg, #0b2240 0%, #16335b 100%);
+  border-bottom-right-radius: 100%;
+  z-index: -2;
+  box-shadow: 10px 10px 40px rgba(15, 37, 68, 0.12);
   pointer-events: none;
-  z-index: -1;
 }
 
-body::after {
-  content: '';
+.decor-left-sub {
   position: absolute;
-  top: 10%; right: -200px;
-  width: 600px; height: 600px;
-  background: radial-gradient(circle, rgba(39, 174, 96, 0.04) 0%, rgba(39, 174, 96, 0.01) 50%, transparent 100%);
-  border-radius: 50%;
+  top: 0; left: 0;
+  width: 320px; height: 320px;
+  background: #e8f0fe;
+  border-bottom-right-radius: 100%;
+  z-index: -3;
   pointer-events: none;
-  z-index: -1;
+}
+
+.decor-right {
+  position: absolute;
+  top: -120px; right: -120px;
+  width: 380px; height: 380px;
+  border: 1.5px solid rgba(39, 174, 96, 0.3);
+  border-radius: 50%;
+  z-index: -2;
+  pointer-events: none;
+}
+
+.decor-right-sub {
+  position: absolute;
+  top: -60px; right: -60px;
+  width: 300px; height: 300px;
+  border: 1.5px solid rgba(27, 102, 236, 0.18);
+  border-radius: 50%;
+  z-index: -3;
+  pointer-events: none;
+}
+
+.decor-dots {
+  position: absolute;
+  top: 60px; right: 40px;
+  width: 100px; height: 140px;
+  background-image: radial-gradient(rgba(22, 51, 91, 0.12) 1.5px, transparent 1.5px);
+  background-size: 14px 14px;
+  z-index: -4;
+  pointer-events: none;
 }
 
 /* ── HERO ──────────────────────────────────── */
