@@ -1,3 +1,20 @@
+let consultaTurnstileToken = null;
+
+// Callback para inicialización programática de Turnstile en Consulta de Estado
+window.onloadTurnstileCallback = function() {
+  if (document.getElementById("consultaTurnstileWidget") && window.turnstile) {
+    window.turnstile.render("#consultaTurnstileWidget", {
+      sitekey: SST_CONFIG.TURNSTILE_SITE_KEY || "1x00000000000000000000AA",
+      callback: function(token) {
+        consultaTurnstileToken = token;
+      },
+      "expired-callback": function() {
+        consultaTurnstileToken = null;
+      }
+    });
+  }
+};
+
 document.getElementById("formBusqueda").addEventListener("submit", buscar);
 
 async function buscar(e) {
@@ -10,6 +27,13 @@ async function buscar(e) {
 
   if (!nombre || !cedula) {
     msgEl.textContent = "Completa los dos campos para buscar";
+    msgEl.className   = "msg error show"; msgEl.style.display = "block";
+    return;
+  }
+
+  // Validar Turnstile
+  if (SST_CONFIG.TURNSTILE_SITE_KEY && !consultaTurnstileToken) {
+    msgEl.textContent = "❌ Por favor completa la verificación de seguridad (antibot)";
     msgEl.className   = "msg error show"; msgEl.style.display = "block";
     return;
   }
@@ -29,6 +53,10 @@ async function buscar(e) {
     if (!encontrados || !encontrados.length) {
       msgEl.textContent = "❌ No se encontraron documentos con esos datos. Verifica el nombre exacto del proveedor y tu cédula.";
       msgEl.className   = "msg error show"; msgEl.style.display = "block";
+      if (window.turnstile && document.getElementById("consultaTurnstileWidget")) {
+        window.turnstile.reset();
+        consultaTurnstileToken = null;
+      }
       return;
     }
 
@@ -72,6 +100,10 @@ async function buscar(e) {
     msgEl.textContent = "❌ Error al conectar: " + err.message;
     msgEl.className   = "msg error show"; msgEl.style.display = "block";
     console.error(err);
+    if (window.turnstile && document.getElementById("consultaTurnstileWidget")) {
+      window.turnstile.reset();
+      consultaTurnstileToken = null;
+    }
   } finally {
     Loading.hide();
     btnBuscar.disabled = false;
