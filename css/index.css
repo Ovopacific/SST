@@ -24,6 +24,9 @@ body {
   pointer-events: none;
   transform-origin: top left;
   animation: floatLeft 12s ease-in-out infinite alternate;
+  will-change: transform;
+  backface-visibility: hidden;
+  transform: translate3d(0,0,0);
 }
 
 .decor-left-sub {
@@ -36,6 +39,9 @@ body {
   pointer-events: none;
   transform-origin: top left;
   animation: floatLeftSub 16s ease-in-out infinite alternate;
+  will-change: transform;
+  backface-visibility: hidden;
+  transform: translate3d(0,0,0);
 }
 
 .decor-right {
@@ -47,6 +53,9 @@ body {
   z-index: -2;
   pointer-events: none;
   animation: rotateRight 35s linear infinite;
+  will-change: transform;
+  backface-visibility: hidden;
+  transform: translate3d(0,0,0);
 }
 
 .decor-right-sub {
@@ -58,6 +67,9 @@ body {
   z-index: -3;
   pointer-events: none;
   animation: rotateRightSub 25s linear infinite reverse;
+  will-change: transform;
+  backface-visibility: hidden;
+  transform: translate3d(0,0,0);
 }
 
 .decor-dots {
@@ -69,6 +81,9 @@ body {
   z-index: -4;
   pointer-events: none;
   animation: pulseDots 8s ease-in-out infinite alternate;
+  will-change: transform;
+  backface-visibility: hidden;
+  transform: translate3d(0,0,0);
 }
 
 /* ── ANIMACIONES DE DECORACIÓN ───────────────── */
@@ -480,6 +495,12 @@ body {
 
 /* ── RESPONSIVE ────────────────────────────── */
 @media (max-width: 768px) {
+  /* Desactivar animaciones de fondo en móvil para garantizar 100% fluidez y ahorro de batería */
+  .decor-left, .decor-left-sub, .decor-right, .decor-right-sub, .decor-dots {
+    animation: none !important;
+    transform: none !important;
+  }
+
   .main-grid {
     grid-template-columns: 1fr;
     padding: 1rem 1.5rem 3rem;
