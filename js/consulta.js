@@ -126,7 +126,6 @@ function renderResultados(docs, nombre, cedula) {
           </div>
         ` : ""}
         <div class="doc-card-footer">
-          <a href="${doc["URL Documento"]}" target="_blank" class="doc-link">🔗 Ver documento</a>
           ${esRechazado ? `
             <button type="button" class="btn-reenviar" 
               onclick="abrirModalReenvio('${doc.Requisito.replace(/'/g, "\\'")}', '${doc.Área.replace(/'/g, "\\'")}', '${nombre.replace(/'/g, "\\'")}', '${SSTApi.decrypt(cedula)}')">
