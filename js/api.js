@@ -1,12 +1,4 @@
-/* ═══════════════════════════════════════════════
-   PORTAL SST — CAPA DE API
-   
-   ⚠️ CORS con GitHub Pages + GAS:
-   - fetch() → BLOQUEADO por CORS (GAS redirige)
-   - XHR     → BLOQUEADO igual
-   - JSONP (script tag) → ✅ FUNCIONA siempre
-   - Form + iframe      → ✅ FUNCIONA para POST
-═══════════════════════════════════════════════ */
+
 
 // ── AUXILIARES DE SUPABASE ──────────────────
 let _supabaseInstance = null;
@@ -94,7 +86,7 @@ const SSTApi = {
         { usuario: "visor", rol: "visor", permisos: ["dashboard", "documentos"] }
       ]));
     }
-    
+
     if (action === "getRegistros") {
       let regs = JSON.parse(localStorage.getItem("sst_demo_registros"));
       if (params && params.cedula) {
@@ -102,7 +94,7 @@ const SSTApi = {
       }
       return regs;
     }
-    
+
     if (action === "guardarDocumento") {
       let regs = JSON.parse(localStorage.getItem("sst_demo_registros"));
       let nuevo = {
@@ -124,7 +116,7 @@ const SSTApi = {
       localStorage.setItem("sst_demo_registros", JSON.stringify(regs));
       return { success: true };
     }
-    
+
     if (action === "actualizarEstado") {
       let regs = JSON.parse(localStorage.getItem("sst_demo_registros"));
       let filaNum = parseInt(params.fila || params.Fila);
@@ -140,7 +132,7 @@ const SSTApi = {
       localStorage.setItem("sst_demo_registros", JSON.stringify(regs));
       return { success: encontrado, error: encontrado ? "" : "Registro no encontrado" };
     }
-    
+
     if (action === "eliminarDocumento") {
       let regs = JSON.parse(localStorage.getItem("sst_demo_registros"));
       let filaNum = parseInt(params.fila || params.Fila);
@@ -149,7 +141,7 @@ const SSTApi = {
       localStorage.setItem("sst_demo_registros", JSON.stringify(regs));
       return { success: true };
     }
-    
+
     if (action === "verificarPassword") {
       let usrs = JSON.parse(localStorage.getItem("sst_demo_usuarios"));
       let u = params.usuario.toLowerCase().trim();
@@ -162,11 +154,11 @@ const SSTApi = {
       }
       return { success: false, error: "Usuario/pwd demo incorrecto. Usa admin/admin o 1234" };
     }
-    
+
     if (action === "obtenerUsuarios") {
       return JSON.parse(localStorage.getItem("sst_demo_usuarios"));
     }
-    
+
     if (action === "guardarUsuario") {
       let usrs = JSON.parse(localStorage.getItem("sst_demo_usuarios"));
       let u = params.usuario.toLowerCase().trim();
@@ -180,7 +172,7 @@ const SSTApi = {
       localStorage.setItem("sst_demo_usuarios", JSON.stringify(usrs));
       return { success: true };
     }
-    
+
     if (action === "eliminarUsuario") {
       let usrs = JSON.parse(localStorage.getItem("sst_demo_usuarios"));
       usrs = usrs.filter(x => x.usuario.toLowerCase() !== params.usuario.toLowerCase());
@@ -205,11 +197,11 @@ const SSTApi = {
     if (SST_CONFIG.DEMO_MODE) {
       return this._demoHandler("getRegistros", filtros);
     }
-    
+
     try {
       const client = getSupabaseClient();
       let rows = [];
-      
+
       if (filtros && filtros.cedula) {
         // Consulta anónima segura mediante función RPC para evitar exposición de toda la tabla
         const { data, error } = await client.rpc("consultar_documentos_proveedor", {
@@ -227,7 +219,7 @@ const SSTApi = {
         if (error) throw error;
         rows = data || [];
       }
-      
+
       // Mapear a propiedades del frontend
       return rows.map(row => ({
         Timestamp: row.created_at,
@@ -264,26 +256,26 @@ const SSTApi = {
     if (SST_CONFIG.DEMO_MODE) {
       return this._demoHandler("guardarDocumento", datos);
     }
-    
+
     try {
       const client = getSupabaseClient();
-      
+
       // 1. Decodificar Base64 a Blob para subir a Supabase Storage
       const base64 = datos.base64 || datos.ArchivoBase64;
       const nombreArchivo = datos.nombreArchivo || datos.NombreArchivo;
-      
+
       if (!base64) {
         throw new Error("No se proporcionó el archivo en base64.");
       }
-      
+
       const fileMime = getMimeType(nombreArchivo);
       const blob = base64ToBlob(base64, fileMime);
-      
+
       // Crear un nombre único de archivo para evitar colisiones
       const timestamp = Date.now();
       const cleanProveedor = (datos.proveedor || datos.Proveedor || "prov").replace(/[^a-z0-9]/gi, '_').toLowerCase();
       const storagePath = `${cleanProveedor}/${timestamp}_${nombreArchivo}`;
-      
+
       // Subir archivo al bucket 'documentos_sst'
       const { data: uploadData, error: uploadError } = await client.storage
         .from("documentos_sst")
@@ -291,19 +283,19 @@ const SSTApi = {
           contentType: fileMime,
           upsert: true
         });
-        
+
       if (uploadError) {
         console.error("[Supabase Storage] Error al subir archivo:", uploadError);
         throw uploadError;
       }
-      
+
       // Obtener la URL pública del archivo subido
       const { data: urlData } = client.storage
         .from("documentos_sst")
         .getPublicUrl(storagePath);
-        
+
       const urlDocumento = urlData.publicUrl;
-      
+
       // 2. Insertar metadatos en la tabla 'registros'
       const registroDB = {
         proveedor: datos.proveedor || datos.Proveedor,
@@ -317,19 +309,19 @@ const SSTApi = {
         estado: datos.estado || datos.Estado || "Pendiente",
         comentarios: datos.comentarios || datos.Comentarios || ""
       };
-      
+
       const { data: insertData, error: insertError } = await client
         .from("registros")
         .insert([registroDB])
         .select();
-        
+
       if (insertError) {
         console.error("[Supabase DB] Error al insertar registro:", insertError);
         // Intentar borrar el archivo subido si falla la base de datos
         await client.storage.from("documentos_sst").remove([storagePath]);
         throw insertError;
       }
-      
+
       return { success: true, registros: insertData };
     } catch (err) {
       console.error("[Supabase API] Error en guardarDocumento:", err);
@@ -342,15 +334,15 @@ const SSTApi = {
     if (SST_CONFIG.DEMO_MODE) {
       return this._demoHandler("actualizarEstado", datos);
     }
-    
+
     try {
       const client = getSupabaseClient();
       const filaId = parseInt(datos.fila || datos.Fila);
-      
+
       if (isNaN(filaId)) {
         throw new Error("ID de fila inválido.");
       }
-      
+
       const { error } = await client
         .from("registros")
         .update({
@@ -358,9 +350,9 @@ const SSTApi = {
           comentarios: datos.comentarios || datos.Comentarios || ""
         })
         .eq("id", filaId);
-        
+
       if (error) throw error;
-      
+
       return { success: true };
     } catch (err) {
       console.error("[Supabase API] Error en actualizarEstado:", err);
@@ -372,7 +364,7 @@ const SSTApi = {
   fileToBase64(file) {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
-      reader.onload  = () => resolve(reader.result.split(",")[1]);
+      reader.onload = () => resolve(reader.result.split(",")[1]);
       reader.onerror = reject;
       reader.readAsDataURL(file);
     });
@@ -383,25 +375,25 @@ const SSTApi = {
     if (SST_CONFIG.DEMO_MODE) {
       return this._demoHandler("verificarPassword", { usuario, pwd });
     }
-    
+
     try {
       const client = getSupabaseClient();
       let email = usuario.trim();
-      
+
       // Si ingresa solo un nombre de usuario (ej: admin), le agregamos un dominio por defecto para Supabase Auth
       if (!email.includes("@")) {
         email += "@ovopacific.com";
       }
-      
+
       const { data, error } = await client.auth.signInWithPassword({
         email: email,
         password: pwd
       });
-      
+
       if (error) {
         return { success: false, error: "Credenciales inválidas en Supabase Auth: " + error.message };
       }
-      
+
       return {
         success: true,
         rol: "admin",
@@ -419,16 +411,16 @@ const SSTApi = {
     if (SST_CONFIG.DEMO_MODE) {
       return this._demoHandler("obtenerUsuarios", null);
     }
-    
+
     try {
       const client = getSupabaseClient();
       const { data, error } = await client
         .from("usuarios")
         .select("*")
         .order("id", { ascending: true });
-        
+
       if (error) throw error;
-      
+
       return data || [];
     } catch (err) {
       console.error("[Supabase API] Error en obtenerUsuarios:", err);
@@ -441,29 +433,29 @@ const SSTApi = {
     if (SST_CONFIG.DEMO_MODE) {
       return this._demoHandler("guardarUsuario", { usuario, pwd, permisos });
     }
-    
+
     try {
       const client = getSupabaseClient();
       const u = usuario.toLowerCase().trim();
       const per = permisos || [];
-      
+
       const { data: existingUser } = await client
         .from("usuarios")
         .select("id")
         .eq("usuario", u)
         .maybeSingle();
-        
+
       if (existingUser) {
         const updateData = { permisos: per };
         if (pwd && pwd.trim() !== "") {
           updateData.pwd = pwd;
         }
-        
+
         const { error } = await client
           .from("usuarios")
           .update(updateData)
           .eq("usuario", u);
-          
+
         if (error) throw error;
       } else {
         const { error } = await client
@@ -474,10 +466,10 @@ const SSTApi = {
             rol: "visor",
             permisos: per
           }]);
-          
+
         if (error) throw error;
       }
-      
+
       return { success: true };
     } catch (err) {
       console.error("[Supabase API] Error en guardarUsuarioBackend:", err);
@@ -490,22 +482,22 @@ const SSTApi = {
     if (SST_CONFIG.DEMO_MODE) {
       return this._demoHandler("eliminarUsuario", { usuario });
     }
-    
+
     try {
       const client = getSupabaseClient();
       const u = usuario.toLowerCase().trim();
-      
+
       if (u === "admin") {
         throw new Error("No se puede eliminar el usuario administrador principal.");
       }
-      
+
       const { error } = await client
         .from("usuarios")
         .delete()
         .eq("usuario", u);
-        
+
       if (error) throw error;
-      
+
       return { success: true };
     } catch (err) {
       console.error("[Supabase API] Error en eliminarUsuarioBackend:", err);
@@ -518,21 +510,21 @@ const SSTApi = {
     if (SST_CONFIG.DEMO_MODE) {
       return this._demoHandler("eliminarDocumento", datos);
     }
-    
+
     try {
       const client = getSupabaseClient();
       const filaId = parseInt(datos.fila || datos.Fila);
-      
+
       if (isNaN(filaId)) {
         throw new Error("ID de fila inválido para eliminar.");
       }
-      
+
       const { data: docData } = await client
         .from("registros")
         .select("url_documento")
         .eq("id", filaId)
         .maybeSingle();
-        
+
       if (docData && docData.url_documento) {
         try {
           const parts = docData.url_documento.split('/documentos_sst/');
@@ -544,14 +536,14 @@ const SSTApi = {
           console.warn("[Supabase Storage] No se pudo borrar el archivo:", storageErr);
         }
       }
-      
+
       const { error } = await client
         .from("registros")
         .delete()
         .eq("id", filaId);
-        
+
       if (error) throw error;
-      
+
       return { success: true };
     } catch (err) {
       console.error("[Supabase API] Error en eliminarDocumento:", err);
@@ -586,12 +578,12 @@ const SSTAreas = {
     try {
       const s = localStorage.getItem("areasSST");
       return s ? JSON.parse(s) : JSON.parse(JSON.stringify(SST_CONFIG.AREAS_DEFAULT));
-    } catch(e) {
+    } catch (e) {
       return JSON.parse(JSON.stringify(SST_CONFIG.AREAS_DEFAULT));
     }
   },
   save(areas) { localStorage.setItem("areasSST", JSON.stringify(areas)); },
-  init()      { if (!localStorage.getItem("areasSST")) this.save(JSON.parse(JSON.stringify(SST_CONFIG.AREAS_DEFAULT))); }
+  init() { if (!localStorage.getItem("areasSST")) this.save(JSON.parse(JSON.stringify(SST_CONFIG.AREAS_DEFAULT))); }
 };
 
 /* ── TOAST ──────────────────────────────────── */
@@ -605,18 +597,18 @@ const Toast = {
   show(msg, tipo = "info", ms = 4000) {
     if (!this._wrap) this.init();
     const el = document.createElement("div");
-    el.className   = "toast-item " + tipo;
-    el.innerHTML   = msg;
+    el.className = "toast-item " + tipo;
+    el.innerHTML = msg;
     this._wrap.appendChild(el);
     setTimeout(() => {
-      el.style.opacity   = "0";
+      el.style.opacity = "0";
       el.style.transform = "translateX(100%)";
       el.style.transition = "all 0.3s ease";
       setTimeout(() => el.remove(), 300);
     }, ms);
   },
-  ok(msg)   { this.show(msg, "success"); },
-  err(msg, ms=6000) { this.show(msg, "error", ms); },
+  ok(msg) { this.show(msg, "success"); },
+  err(msg, ms = 6000) { this.show(msg, "error", ms); },
   info(msg) { this.show(msg, "info"); },
   warn(msg) { this.show(msg, "warning"); }
 };
@@ -636,7 +628,7 @@ function fmtFecha(val) {
     return new Date(val).toLocaleDateString("es-CO", {
       year: "numeric", month: "short", day: "numeric"
     });
-  } catch(e) { return String(val); }
+  } catch (e) { return String(val); }
 }
 
 /* ── INIT ───────────────────────────────────── */
