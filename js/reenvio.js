@@ -3,12 +3,13 @@
 let documentoEnReenvio = null;
 
 // Abrir modal de reenvío
-function abrirModalReenvio(requisito, area, proveedor, cedula) {
+function abrirModalReenvio(requisito, area, proveedor, cedula, filaId) {
     documentoEnReenvio = {
         requisito: requisito,
         area: area,
         proveedor: proveedor,
-        cedula: cedula
+        cedula: cedula,
+        filaId: filaId
     };
 
     document.getElementById('reqNombre').textContent = SSTApi.escapeHTML(requisito);
@@ -89,6 +90,20 @@ async function enviarReenvio() {
         const resultado = await SSTApi.guardarDocumento(datos);
 
         if (resultado.success) {
+            // Eliminar el documento rechazado anterior si existe
+            if (documentoEnReenvio.filaId) {
+                try {
+                    await SSTApi.eliminarDocumento({
+                        fila: documentoEnReenvio.filaId,
+                        proveedor: datos.proveedor,
+                        requisito: datos.requisito,
+                        area: datos.area
+                    });
+                    console.log('Documento rechazado anterior eliminado:', documentoEnReenvio.filaId);
+                } catch (delErr) {
+                    console.warn('No se pudo borrar el documento rechazado anterior:', delErr);
+                }
+            }
             // Mostrar éxito de manera mucho más clara
             const formBody = document.querySelector('.modal-body-reenvio');
             const footer = document.querySelector('.modal-footer-reenvio');

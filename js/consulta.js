@@ -128,7 +128,7 @@ function renderResultados(docs, nombre, cedula) {
         <div class="doc-card-footer">
           ${esRechazado ? `
             <button type="button" class="btn-reenviar" 
-              onclick="abrirModalReenvio('${doc.Requisito.replace(/'/g, "\\'")}', '${doc.Área.replace(/'/g, "\\'")}', '${nombre.replace(/'/g, "\\'")}', '${SSTApi.decrypt(cedula)}')">
+              onclick="abrirModalReenvio('${doc.Requisito.replace(/'/g, "\\'")}', '${doc.Área.replace(/'/g, "\\'")}', '${nombre.replace(/'/g, "\\'")}', '${SSTApi.decrypt(cedula)}', '${doc.Fila || doc._fila || ""}')">
               📤 Reenviar Documento
             </button>
           ` : ""}
