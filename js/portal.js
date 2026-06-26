@@ -188,12 +188,32 @@ async function enviarFormulario() {
   }
 
   btnEnviar.disabled = true;
+  
+  // Mostrar overlay de carga interactivo
+  const overlay = document.getElementById("uploadLoadingOverlay");
+  const overlayStatus = document.getElementById("uploadOverlayStatus");
+  const overlayProgress = document.getElementById("uploadOverlayProgress");
+  const overlayPct = document.getElementById("uploadOverlayPct");
+  
+  if (overlay) {
+    overlay.style.display = "flex";
+    overlayStatus.textContent = `Iniciando transferencia...`;
+    overlayProgress.style.width = "0%";
+    overlayPct.textContent = "0%";
+  }
+
   progressWrap.classList.add("show");
   let enviados = 0, errores = [];
 
   for (let i = 0; i < reqs.length; i++) {
     const pct = Math.round((i / reqs.length) * 100);
     progressFill.style.width = pct + "%";
+
+    if (overlay) {
+      overlayProgress.style.width = pct + "%";
+      overlayPct.textContent = pct + "%";
+      overlayStatus.textContent = `Enviando ${i + 1} de ${reqs.length}: "${reqs[i]}"...`;
+    }
 
     msgEl.textContent = `⏳ Enviando ${i + 1} de ${reqs.length}: ${reqs[i]}...`;
     msgEl.className = "msg info show"; msgEl.style.display = "block";
@@ -218,7 +238,17 @@ async function enviarFormulario() {
   }
 
   progressFill.style.width = "100%";
-  setTimeout(() => { progressWrap.classList.remove("show"); progressFill.style.width = "0%"; }, 1200);
+  if (overlay) {
+    overlayProgress.style.width = "100%";
+    overlayPct.textContent = "100%";
+    overlayStatus.textContent = "¡Carga finalizada con éxito!";
+  }
+
+  setTimeout(() => { 
+    progressWrap.classList.remove("show"); 
+    progressFill.style.width = "0%"; 
+    if (overlay) overlay.style.display = "none";
+  }, 1200);
 
   if (enviados === reqs.length) {
     msgEl.textContent = `✅ ¡${enviados} documento(s) enviados! El equipo SST revisará y actualizará el estado.`;
