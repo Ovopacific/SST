@@ -15,7 +15,7 @@ const SST_CONFIG = {
 
   // ── CONFIGURACIÓN DE CLOUDFLARE TURNSTILE ──
   // Reemplaza esta Site Key de prueba con tu Site Key real de Cloudflare Turnstile
-  TURNSTILE_SITE_KEY: "1x00000000000000000000AA",
+  TURNSTILE_SITE_KEY: "0x4AAAAAADrgHOy2MMsEegbB",
 
 
   // ── Áreas por defecto si no hay ─────────────
