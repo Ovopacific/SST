@@ -234,8 +234,9 @@ function renderTablaDocumentos() {
         <td>${SSTApi.escapeHTML(data.responsable)}</td>
         <td><strong>${totalDocs}</strong> docs</td>
         <td>${badgeHtml || '<span class="badge pendiente">0</span>'}</td>
-        <td style="text-align: right;">
-          <button class="btn btn-ghost btn-sm">Ver Detalles ⬇</button>
+        <td style="text-align: right; white-space: nowrap;">
+          <button class="btn btn-ghost btn-sm" style="margin-right: 4px;">Ver Detalles ⬇</button>
+          <button class="btn btn-danger btn-sm" onclick="eliminarProveedorCompleto('${provName.replace(/'/g, "\\'")}', event)">🗑️ Eliminar</button>
         </td>
       </tr>
       
@@ -700,5 +701,50 @@ window.toggleRevealDocProv = function(realVal, id) {
     el.textContent = realVal;
   } else {
     el.textContent = SSTApi.maskDocumento(realVal);
+  }
+};
+
+window.eliminarProveedorCompleto = async function(provName, event) {
+  if (event) {
+    event.stopPropagation();
+  }
+  
+  if (!confirm(`¿Estás seguro de que deseas eliminar al proveedor "${provName}" por completo?\n\nEsta acción borrará todos sus documentos, archivos en la nube y registros asociados permanentemente.`)) {
+    return;
+  }
+  
+  try {
+    Loading.show();
+    
+    // Buscar todos los registros que pertenecen a este proveedor
+    const docsAEliminar = registros.filter(r => r.Proveedor === provName);
+    
+    if (docsAEliminar.length === 0) {
+      Toast.err("No se encontraron documentos para este proveedor.");
+      return;
+    }
+    
+    let eliminadosCount = 0;
+    for (const doc of docsAEliminar) {
+      const filaId = doc.Fila || doc._fila || "";
+      const res = await SSTApi.eliminarDocumento({
+        fila: filaId,
+        proveedor: doc.Proveedor,
+        requisito: doc.Requisito,
+        area: doc.Área || ""
+      });
+      if (res && res.success) {
+        eliminadosCount++;
+      } else {
+        console.warn(`[SST] No se pudo eliminar documento individual:`, doc, res?.error);
+      }
+    }
+    
+    await cargarDatos();
+    Toast.ok(`Proveedor "${provName}" y ${eliminadosCount} documentos eliminados completamente.`);
+  } catch (e) {
+    Toast.err("Error al eliminar proveedor: " + e.message);
+  } finally {
+    Loading.hide();
   }
 };
