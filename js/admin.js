@@ -9,6 +9,24 @@ let editandoArea = null;
 window.expandedProveedores = new Set();
 
 let currentUser = null; // { usuario, rol, permisos }
+let adminTurnstileToken = null;
+let intentosFallidos = 0;
+let bloqueadoHasta = null;
+
+// Callback para inicialización programática de Turnstile en Admin
+window.onloadTurnstileCallback = function() {
+  if (document.getElementById("adminTurnstileWidget") && window.turnstile) {
+    window.turnstile.render("#adminTurnstileWidget", {
+      sitekey: SST_CONFIG.TURNSTILE_SITE_KEY || "1x00000000000000000000AA",
+      callback: function(token) {
+        adminTurnstileToken = token;
+      },
+      "expired-callback": function() {
+        adminTurnstileToken = null;
+      }
+    });
+  }
+};
 
 /* ── LOGIN ─────────────────────────────────── */
 document.getElementById("loginForm").addEventListener("submit", async e => {
@@ -19,6 +37,22 @@ document.getElementById("loginForm").addEventListener("submit", async e => {
   const errorEl = document.getElementById("loginError");
   
   if (!pwd) return;
+
+  // 1. Validar bloqueo por fuerza bruta
+  if (bloqueadoHasta && Date.now() < bloqueadoHasta) {
+    const segRestantes = Math.ceil((bloqueadoHasta - Date.now()) / 1000);
+    const minsRestantes = Math.ceil(segRestantes / 60);
+    errorEl.style.display = "block";
+    errorEl.textContent = `❌ Acceso bloqueado por seguridad. Inténtalo de nuevo en ${minsRestantes} minuto(s).`;
+    return;
+  }
+  
+  // 2. Validar Turnstile
+  if (SST_CONFIG.TURNSTILE_SITE_KEY && !adminTurnstileToken) {
+    errorEl.style.display = "block";
+    errorEl.textContent = "❌ Por favor completa la verificación de seguridad (antibot)";
+    return;
+  }
   
   btn.disabled = true;
   btn.textContent = "Verificando...";
@@ -27,6 +61,10 @@ document.getElementById("loginForm").addEventListener("submit", async e => {
   const respuesta = await SSTApi.verificarPassword(usuario, pwd);
   
   if (respuesta && respuesta.success) {
+    // Éxito: restablecer intentos
+    intentosFallidos = 0;
+    bloqueadoHasta = null;
+
     if (respuesta.token) {
       sessionStorage.setItem("sst_token", respuesta.token);
     }
@@ -41,8 +79,21 @@ document.getElementById("loginForm").addEventListener("submit", async e => {
     document.getElementById("appLayout").style.display  = "grid";
     iniciarAdmin();
   } else {
+    // Fallo: incrementar intentos y aplicar bloqueo si es necesario
+    intentosFallidos++;
+    if (intentosFallidos >= 5) {
+      bloqueadoHasta = Date.now() + 5 * 60 * 1000; // 5 minutos
+      errorEl.textContent   = "❌ Contraseña incorrecta. Demasiados intentos fallidos. Acceso bloqueado por 5 minutos.";
+    } else {
+      errorEl.textContent   = `❌ ${respuesta?.error || "Error de conexión"} (Intento ${intentosFallidos} de 5)`;
+    }
     errorEl.style.display = "block";
-    errorEl.textContent   = "❌ " + (respuesta.error || "Error de conexión");
+
+    // Reiniciar widget de Turnstile
+    if (window.turnstile && document.getElementById("adminTurnstileWidget")) {
+      window.turnstile.reset();
+      adminTurnstileToken = null;
+    }
   }
   
   btn.disabled = false;
@@ -58,6 +109,11 @@ function logout() {
   sessionStorage.removeItem("sst_token");
   registros = []; filtrados = [];
   currentUser = null;
+
+  if (window.turnstile && document.getElementById("adminTurnstileWidget")) {
+    window.turnstile.reset();
+    adminTurnstileToken = null;
+  }
 }
 
 /* ── INICIAR ────────────────────────────────── */
