@@ -6,6 +6,7 @@ let registros   = [];   // todos los registros
 let filtrados   = [];   // registros filtrados
 let editandoDoc = null; // { idx, registro }
 let editandoArea = null;
+window.expandedProveedores = new Set();
 
 let currentUser = null; // { usuario, rol, permisos }
 
@@ -219,12 +220,17 @@ function renderTablaDocumentos() {
     if (data.stats.Pendiente > 0) badgeHtml += `<span class="badge pendiente" style="margin-right:4px;" title="Pendientes">${data.stats.Pendiente} ⏳</span>`;
     if (data.stats.Aprobado > 0)  badgeHtml += `<span class="badge aprobado" title="Aprobados">${data.stats.Aprobado} ✅</span>`;
     
+    // Determinar si está expandido
+    const isExpanded = window.expandedProveedores && window.expandedProveedores.has(provName);
+    const displayStyle = isExpanded ? "table-row" : "none";
+    const rotateStyle = isExpanded ? "rotate(90deg)" : "rotate(0deg)";
+    
     // Fila Principal (Acordeón)
     html += `
-      <tr class="prov-row" onclick="toggleProveedor('provDetail_${pIdx}')" style="cursor: pointer; background: var(--off-white); transition: background 0.2s;">
+      <tr class="prov-row" onclick="toggleProveedor('${provName.replace(/'/g, "\\'")}', 'provDetail_${pIdx}')" style="cursor: pointer; background: var(--off-white); transition: background 0.2s;">
         <td>
           <div style="display:flex; align-items:center; gap:8px;">
-            <span id="icon_provDetail_${pIdx}" style="font-size:0.8rem; color:var(--gray-500); transition: transform 0.3s;">▶</span>
+            <span id="icon_provDetail_${pIdx}" style="font-size:0.8rem; color:var(--gray-500); transition: transform 0.3s; transform: ${rotateStyle};">▶</span>
             <div>
               <strong>${SSTApi.escapeHTML(provName)}</strong>
               <div style="font-size: 0.8rem; color: var(--gray-500);">${SSTApi.escapeHTML(data.empresa)}</div>
@@ -240,8 +246,8 @@ function renderTablaDocumentos() {
         </td>
       </tr>
       
-      <!-- Fila Detalles (Oculta por defecto) -->
-      <tr id="provDetail_${pIdx}" style="display: none; background: #fafafa;">
+      <!-- Fila Detalles -->
+      <tr id="provDetail_${pIdx}" style="display: ${displayStyle}; background: #fafafa;">
         <td colspan="5" style="padding: 0; border-bottom: 2px solid var(--gray-200);">
           <div style="padding: 1rem 1.5rem 1rem 3rem; box-shadow: inset 0 3px 6px rgba(0,0,0,0.03);">
             <table style="background: white; border: 1px solid var(--gray-200); border-radius: 8px; overflow: hidden; margin: 0; min-width: 100%;">
@@ -295,16 +301,18 @@ function renderTablaDocumentos() {
 }
 
 // Función para abrir/cerrar el acordeón de cada proveedor
-window.toggleProveedor = function(rowId) {
+window.toggleProveedor = function(provName, rowId) {
   const detailRow = document.getElementById(rowId);
   const icon = document.getElementById("icon_" + rowId);
   
   if (detailRow.style.display === "none") {
     detailRow.style.display = "table-row";
     if(icon) icon.style.transform = "rotate(90deg)";
+    window.expandedProveedores.add(provName);
   } else {
     detailRow.style.display = "none";
     if(icon) icon.style.transform = "rotate(0deg)";
+    window.expandedProveedores.delete(provName);
   }
 };
 
