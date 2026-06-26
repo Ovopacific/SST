@@ -3,6 +3,22 @@
 ═══════════════════════════════════════════════ */
 
 let archivos = {};   // { index: File }
+let turnstileToken = null;
+
+// Callback para inicialización programática de Turnstile
+window.onloadTurnstileCallback = function() {
+  if (document.getElementById("myTurnstileWidget") && window.turnstile) {
+    window.turnstile.render("#myTurnstileWidget", {
+      sitekey: SST_CONFIG.TURNSTILE_SITE_KEY || "1x00000000000000000000AA",
+      callback: function(token) {
+        turnstileToken = token;
+      },
+      "expired-callback": function() {
+        turnstileToken = null;
+      }
+    });
+  }
+};
 
 /* ── INIT ──────────────────────────────────── */
 document.addEventListener("DOMContentLoaded", async () => {
@@ -78,6 +94,15 @@ function cargarRequisitos() {
 
   wrap.style.display = "block";
   document.getElementById("submitWrap").style.display = "block";
+  
+  const turnstileWrap = document.getElementById("turnstileWrap");
+  if (turnstileWrap) {
+    turnstileWrap.style.display = "flex";
+    if (window.turnstile && window.turnstile.reset) {
+      window.turnstile.reset();
+      turnstileToken = null;
+    }
+  }
 }
 
 /* ── ARCHIVO SELECCIONADO ───────────────────── */
@@ -137,6 +162,14 @@ async function enviarFormulario() {
   // Validar proveedor
   if (!proveedor || !responsable || !documento || !empresa || !area) {
     msgEl.textContent = "❌ Completa todos los campos obligatorios";
+    msgEl.className = "msg error show"; msgEl.style.display = "block";
+    msgEl.scrollIntoView({ behavior: "smooth", block: "center" });
+    return;
+  }
+
+  // Validar verificación antibot (Turnstile)
+  if (SST_CONFIG.TURNSTILE_SITE_KEY && !turnstileToken) {
+    msgEl.textContent = "❌ Por favor completa la verificación de seguridad (antibot)";
     msgEl.className = "msg error show"; msgEl.style.display = "block";
     msgEl.scrollIntoView({ behavior: "smooth", block: "center" });
     return;

@@ -13,6 +13,10 @@ const SST_CONFIG = {
   SUPABASE_URL: "https://ocfvenqjucvxpnowiwgi.supabase.co",
   SUPABASE_KEY: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9jZnZlbnFqdWN2eHBub3dpd2dpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIzOTE5NzAsImV4cCI6MjA5Nzk2Nzk3MH0.ChiADUJMClemPeLnRhS6SHHcoqgD0wgx8qn7_ltkl8E",
 
+  // ── CONFIGURACIÓN DE CLOUDFLARE TURNSTILE ──
+  // Reemplaza esta Site Key de prueba con tu Site Key real de Cloudflare Turnstile
+  TURNSTILE_SITE_KEY: "1x00000000000000000000AA",
+
 
   // ── Áreas por defecto si no hay ─────────────
   AREAS_DEFAULT: {
