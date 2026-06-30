@@ -28,11 +28,11 @@
     </div>
     <h1>Portal SST</h1>
     <p class="subtitle">Sistema de Gestión de Documentos para Proveedores</p>
-    
+
     <div class="sst-badge">
       <span class="badge-icon">🛡️</span> Seguridad y Salud en el Trabajo
     </div>
-    
+
     <p class="intro-text">
       Gestiona, verifica y da seguimiento a tus documentos de forma fácil, segura y eficiente.
     </p>
@@ -46,7 +46,7 @@
           <span class="btn-desc">Información importante</span>
         </div>
       </a>
-      
+
       <button onclick="document.getElementById('tutorialModal').style.display='flex'" class="info-card-btn">
         <div class="btn-icon-circle green-bg">📖</div>
         <div class="btn-text-block">
@@ -63,9 +63,10 @@
     <!-- PORTAL PROVEEDORES -->
     <div class="mod-card proveedor" onclick="window.location.href='portal_proveedores.html'">
       <span class="card-badge">PRINCIPAL</span>
-      
+
       <div class="card-icon-wrap blue-bg">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" class="svg-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+          stroke-linecap="round" stroke-linejoin="round" class="svg-icon">
           <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
           <polyline points="14 2 14 8 20 8"></polyline>
           <line x1="12" y1="18" x2="12" y2="12"></line>
@@ -75,27 +76,28 @@
 
       <h2>Portal de Proveedores</h2>
       <p class="card-desc">Carga tus documentos requeridos de forma fácil y segura.</p>
-      
+
       <ul class="features-list">
         <li><span class="chk blue-chk">✓</span> Formulario guiado paso a paso</li>
         <li><span class="chk blue-chk">✓</span> Carga de archivos PDF, DOC, imágenes</li>
         <li><span class="chk blue-chk">✓</span> Requisitos dinámicos por área</li>
         <li><span class="chk blue-chk">✓</span> Confirmación de envío en tiempo real</li>
       </ul>
-      
+
       <button class="action-btn upload-btn">
         <span>☁</span> Subir documentos &nbsp;→
       </button>
-      
+
       <div class="secure-footer">
-        <span class="lock-icon">🔒</span> Carga segura y encriptada
+        <span class="lock-icon"></span>
       </div>
     </div>
 
     <!-- CONSULTA -->
     <div class="mod-card consulta" onclick="window.location.href='consulta_estado.html'">
       <div class="card-icon-wrap green-bg">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" class="svg-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+          stroke-linecap="round" stroke-linejoin="round" class="svg-icon">
           <circle cx="11" cy="11" r="8"></circle>
           <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
         </svg>
@@ -103,14 +105,14 @@
 
       <h2>Consulta de Estado</h2>
       <p class="card-desc">Verifica el estado y seguimiento de tus documentos enviados.</p>
-      
+
       <ul class="features-list">
         <li><span class="chk green-chk">✓</span> Búsqueda por nombre o cédula</li>
         <li><span class="chk green-chk">✓</span> Ver estado de cada documento</li>
         <li><span class="chk green-chk">✓</span> Leer comentarios del equipo SST</li>
         <li><span class="chk green-chk">✓</span> Resumen de aprobaciones</li>
       </ul>
-      
+
       <button class="action-btn status-btn">
         Consultar estado &nbsp;→
       </button>
@@ -143,7 +145,8 @@
       <!-- Header -->
       <div
         style="background: #16335b; color: white; padding: 20px 24px; display: flex; justify-content: space-between; align-items: center;">
-        <h2 style="margin: 0; font-size: 1.15rem; display: flex; align-items: center; gap: 10px; font-family: 'Syne', sans-serif;">
+        <h2
+          style="margin: 0; font-size: 1.15rem; display: flex; align-items: center; gap: 10px; font-family: 'Syne', sans-serif;">
           <span>📖</span> Guía Rápida para Proveedores
         </h2>
         <button onclick="document.getElementById('tutorialModal').style.display='none'"
@@ -158,8 +161,12 @@
             style="background: #e8f0fe; color: #1b66ec; width: 36px; height: 36px; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-weight: bold; font-size: 1.1rem; flex-shrink: 0;">
             1</div>
           <div>
-            <h3 style="margin: 0 0 6px 0; color: #16335b; font-size: 1rem; font-weight: 600;">Ingresa tus Datos y Selecciona Área</h3>
-            <p style="margin: 0; font-size: 0.9rem; line-height: 1.5; color: #5a657d;">Haz clic en <strong>"Subir documentos"</strong>. Lo primero será ingresar tus datos personales y empresariales, luego elegir el área de trabajo que vas a ingresar y escribir el nombre de tu <strong>Responsable</strong> en Ovopacific. Esto nos dirá exactamente qué documentos necesitas subir.</p>
+            <h3 style="margin: 0 0 6px 0; color: #16335b; font-size: 1rem; font-weight: 600;">Ingresa tus Datos y
+              Selecciona Área</h3>
+            <p style="margin: 0; font-size: 0.9rem; line-height: 1.5; color: #5a657d;">Haz clic en <strong>"Subir
+                documentos"</strong>. Lo primero será ingresar tus datos personales y empresariales, luego elegir el
+              área de trabajo que vas a ingresar y escribir el nombre de tu <strong>Responsable</strong> en Ovopacific.
+              Esto nos dirá exactamente qué documentos necesitas subir.</p>
           </div>
         </div>
 
@@ -169,7 +176,9 @@
             2</div>
           <div>
             <h3 style="margin: 0 0 6px 0; color: #16335b; font-size: 1rem; font-weight: 600;">Sube tus Archivos</h3>
-            <p style="margin: 0; font-size: 0.9rem; line-height: 1.5; color: #5a657d;">Verás la lista de requisitos correspondientes al área seleccionada. Haz clic en el botón de subir de cada requisito y selecciona el archivo desde tu computadora o celular (PDF, Word o Imágenes).</p>
+            <p style="margin: 0; font-size: 0.9rem; line-height: 1.5; color: #5a657d;">Verás la lista de requisitos
+              correspondientes al área seleccionada. Haz clic en el botón de subir de cada requisito y selecciona el
+              archivo desde tu computadora o celular (PDF, Word o Imágenes).</p>
           </div>
         </div>
 
@@ -179,7 +188,10 @@
             3</div>
           <div>
             <h3 style="margin: 0 0 6px 0; color: #16335b; font-size: 1rem; font-weight: 600;">Consulta el Estado</h3>
-            <p style="margin: 0; font-size: 0.9rem; line-height: 1.5; color: #5a657d;">Una vez enviados, puedes regresar a la página principal y hacer clic en <strong>"Consultar estado"</strong> para verificar si fueron aprobados o si debes corregir y reenviar alguno. Solo necesitas tu número de cédula y nombre exacto de proveedor.</p>
+            <p style="margin: 0; font-size: 0.9rem; line-height: 1.5; color: #5a657d;">Una vez enviados, puedes regresar
+              a la página principal y hacer clic en <strong>"Consultar estado"</strong> para verificar si fueron
+              aprobados o si debes corregir y reenviar alguno. Solo necesitas tu número de cédula y nombre exacto de
+              proveedor.</p>
           </div>
         </div>
 

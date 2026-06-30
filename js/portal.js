@@ -6,14 +6,14 @@ let archivos = {};   // { index: File }
 let turnstileToken = null;
 
 // Callback para inicialización programática de Turnstile
-window.onloadTurnstileCallback = function() {
+window.onloadTurnstileCallback = function () {
   if (document.getElementById("myTurnstileWidget") && window.turnstile) {
     window.turnstile.render("#myTurnstileWidget", {
       sitekey: SST_CONFIG.TURNSTILE_SITE_KEY || "1x00000000000000000000AA",
-      callback: function(token) {
+      callback: function (token) {
         turnstileToken = token;
       },
-      "expired-callback": function() {
+      "expired-callback": function () {
         turnstileToken = null;
       }
     });
@@ -94,7 +94,7 @@ function cargarRequisitos() {
 
   wrap.style.display = "block";
   document.getElementById("submitWrap").style.display = "block";
-  
+
   const turnstileWrap = document.getElementById("turnstileWrap");
   if (turnstileWrap) {
     turnstileWrap.style.display = "flex";
@@ -111,33 +111,33 @@ function onFileChange(idx, reqName) {
   const file = input.files[0];
   const reqItem = document.getElementById(`reqItem_${idx}`);
   const confirmBlock = document.getElementById(`confirm_${idx}`);
-  
+
   if (!file) {
     reqItem.classList.remove("ok");
     confirmBlock.classList.remove("show");
     delete archivos[idx];
     return;
   }
-  
+
   // 1. Validar el tamaño del archivo (Máximo 5MB)
   const MAX_SIZE_MB = 5;
   if (file.size > MAX_SIZE_MB * 1024 * 1024) {
-    alert(`❌ El archivo pesa demasiado (${(file.size/1024/1024).toFixed(1)}MB).\nEl tamaño máximo permitido es ${MAX_SIZE_MB}MB.`);
+    alert(`❌ El archivo pesa demasiado (${(file.size / 1024 / 1024).toFixed(1)}MB).\nEl tamaño máximo permitido es ${MAX_SIZE_MB}MB.`);
     input.value = ""; // Limpiar el input
     return;
   }
-  
+
   // 2. Validar qué tipo de archivo es (Extensiones permitidas)
   const extensionesPermitidas = ['.pdf', '.jpg', '.jpeg', '.png', '.doc', '.docx', '.xls', '.xlsx'];
   const fileNameMinusculas = file.name.toLowerCase();
   const extensionSoportada = extensionesPermitidas.some(ext => fileNameMinusculas.endsWith(ext));
-  
+
   if (!extensionSoportada) {
     alert(`❌ Formato de archivo no permitido.\nSolo se aceptan: ${extensionesPermitidas.join(', ')}`);
     input.value = ""; // Limpiar el input
     return;
   }
-  
+
   archivos[idx] = file;
   document.getElementById(`fname_${idx}`).textContent = file.name;
   confirmBlock.classList.add("show");
@@ -188,13 +188,13 @@ async function enviarFormulario() {
   }
 
   btnEnviar.disabled = true;
-  
+
   // Mostrar overlay de carga interactivo
   const overlay = document.getElementById("uploadLoadingOverlay");
   const overlayStatus = document.getElementById("uploadOverlayStatus");
   const overlayProgress = document.getElementById("uploadOverlayProgress");
   const overlayPct = document.getElementById("uploadOverlayPct");
-  
+
   if (overlay) {
     overlay.style.display = "flex";
     overlayStatus.textContent = `Iniciando transferencia...`;
@@ -222,7 +222,7 @@ async function enviarFormulario() {
       const base64 = await SSTApi.fileToBase64(archivos[i]);
 
       await SSTApi.guardarDocumento({
-        proveedor, responsable, 
+        proveedor, responsable,
         documento: SSTApi.encrypt(documento), // ENCRIPTAR DOCUMENTO
         empresa, area,
         requisito: reqs[i],
@@ -244,9 +244,9 @@ async function enviarFormulario() {
     overlayStatus.textContent = "¡Carga finalizada con éxito!";
   }
 
-  setTimeout(() => { 
-    progressWrap.classList.remove("show"); 
-    progressFill.style.width = "0%"; 
+  setTimeout(() => {
+    progressWrap.classList.remove("show");
+    progressFill.style.width = "0%";
     if (overlay) overlay.style.display = "none";
   }, 1200);
 
